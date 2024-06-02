@@ -1,11 +1,30 @@
 package insane96mcp.stamina.stamina;
 
 import net.minecraft.util.Mth;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 
 public class StaminaHandler {
     public static float getMaxStamina(Player player) {
-        return Mth.ceil(player.getHealth()) * StaminaFeature.staminaPerHalfHeart;
+        int maxStamina = Mth.ceil(player.getHealth()) * StaminaFeature.staminaPerHalfHeart;
+        float ratio = player.getHealth() / player.getMaxHealth();
+        if (player.getAttribute(StaminaFeature.BONUS_STAMINA_ATTRIBUTE.get()) != null)
+            maxStamina += (int) (player.getAttributeValue(StaminaFeature.BONUS_STAMINA_ATTRIBUTE.get()) * ratio);
+        if (StaminaFeature.staminaPerLevelOfVigourEnchantment > 0) {
+            int enchLvl = EnchantmentHelper.getEnchantmentLevel(StaminaFeature.VIGOUR.get(), player);
+            if (enchLvl > 0)
+                maxStamina += (int) (StaminaFeature.staminaPerLevelOfVigourEnchantment * enchLvl * ratio);
+        }
+        for (MobEffectInstance instance : player.getActiveEffects()) {
+            if (instance.getEffect() instanceof IStaminaModifier staminaModifier)
+                maxStamina += (int) (staminaModifier.bonusMaxStamina(instance.getAmplifier()) * ratio);
+        }
+        return maxStamina;
+    }
+
+    public static float getStaminaPerHalfHeart(Player player) {
+        return getMaxStamina(player) / player.getHealth();
     }
 
     public static float getStamina(Player player) {

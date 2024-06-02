@@ -1,0 +1,9 @@
+{
+    "effect.stamina.vigour": "Vigour",
+    "effect.stamina.vigour.description": "Increases max stamina",
+
+    "enchantment.stamina.vigour": "Vigour",
+    "enchantment.stamina.vigour.info": "Increases max stamina",
+
+    "attribute.name.bonus_stamina": "Bonus Stamina"
+}

@@ -9,11 +9,11 @@ import net.minecraft.world.item.enchantment.EnchantmentCategory;
 
 import java.util.UUID;
 
-public class Vigour extends Enchantment {
+public class VigourEnchantment extends Enchantment {
 
     public static final UUID MODIFIER_UUID = UUID.fromString("74e97c20-6a62-482f-b909-e709087b066a");
 
-    public Vigour() {
+    public VigourEnchantment() {
         super(Rarity.RARE, EnchantmentCategory.ARMOR_CHEST, new EquipmentSlot[]{EquipmentSlot.CHEST});
     }
 

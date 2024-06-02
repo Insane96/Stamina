@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import insane96mcp.insanelib.base.Module;
 import insane96mcp.stamina.network.NetworkHandler;
 import insane96mcp.stamina.setup.SCommonConfig;
+import insane96mcp.stamina.setup.SRegistries;
 import insane96mcp.stamina.stamina.StaminaFeature;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -29,10 +30,12 @@ public class Stamina
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::commonSetup);
         modEventBus.register(StaminaFeature.class);
+
+        SRegistries.REGISTRIES.forEach(register -> register.register(modEventBus));
     }
 
     public static void initModule() {
-        base = Module.Builder.create(Stamina.RESOURCE_PREFIX + "base", "base", ModConfig.Type.COMMON, SCommonConfig.builder).build();
+        base = Module.Builder.create(Stamina.RESOURCE_PREFIX + "base", "base", ModConfig.Type.COMMON, SCommonConfig.builder).canBeDisabled(false).build();
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {

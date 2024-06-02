@@ -6,25 +6,32 @@ import insane96mcp.insanelib.base.Module;
 import insane96mcp.insanelib.base.config.Config;
 import insane96mcp.insanelib.base.config.LoadFeature;
 import insane96mcp.insanelib.event.PlayerSprintEvent;
+import insane96mcp.insanelib.util.ClientUtils;
 import insane96mcp.insanelib.util.MCUtils;
 import insane96mcp.stamina.Stamina;
+import insane96mcp.stamina.effect.VigourEffect;
+import insane96mcp.stamina.enchantment.VigourEnchantment;
+import insane96mcp.stamina.event.SEventFactory;
 import insane96mcp.stamina.mixin.GuiAccesor;
 import insane96mcp.stamina.network.NetworkHandler;
 import insane96mcp.stamina.network.StaminaSync;
+import insane96mcp.stamina.setup.SRegistries;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.attributes.*;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.phys.Vec2;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -33,15 +40,18 @@ import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.network.NetworkDirection;
+import net.minecraftforge.registries.RegistryObject;
 
 import java.util.UUID;
 
 @Label(name = "Stamina", description = "Stamina to let the player run and do stuff.")
-@LoadFeature(module = Stamina.RESOURCE_PREFIX + "base")
+@LoadFeature(module = Stamina.RESOURCE_PREFIX + "base", canBeDisabled = false)
 public class StaminaFeature extends Feature {
+    public static final RegistryObject<MobEffect> VIGOUR_EFFECT = SRegistries.MOB_EFFECTS.register("vigour", () -> new VigourEffect(MobEffectCategory.BENEFICIAL, 0xFCD373));
     public static final ResourceLocation GUI_ICONS = new ResourceLocation(Stamina.MOD_ID, "textures/gui/icons.png");
 
     public static final UUID SLOWDOWN_UUID = UUID.fromString("b17cbf02-97f8-4c50-9cd1-6dc732593fed");
@@ -50,11 +60,19 @@ public class StaminaFeature extends Feature {
     public static final String STAMINA_LOCKED = Stamina.RESOURCE_PREFIX + "stamina_locked";
     public static String OVERLAY = "stamina_overlay";
 
-    //public static final RegistryObject<Enchantment> VIGOUR = ITRRegistries.ENCHANTMENTS.register("vigour", Vigour::new);
+    public static final RegistryObject<Enchantment> VIGOUR = SRegistries.ENCHANTMENTS.register("vigour", VigourEnchantment::new);
+
+    public static final RegistryObject<Attribute> BONUS_STAMINA_ATTRIBUTE = SRegistries.ATTRIBUTES.register("bonus_stamina", () -> (new RangedAttribute("attribute.name.bonus_stamina", 0, -Double.MAX_VALUE, Double.MAX_VALUE)).setSyncable(true));
 
     @Config(min = 0)
     @Label(name = "Stamina per half heart", description = "How much stamina the player has per half heart. Each 1 stamina is 1 tick of running")
     public static Integer staminaPerHalfHeart = 5;
+    @Config(min = 0)
+    @Label(name = "Bonus stamina per level of Vigour Enchantment")
+    public static Integer staminaPerLevelOfVigourEnchantment = 25;
+    @Config(min = 0)
+    @Label(name = "Bonus stamina per level of Vigour Effect")
+    public static Integer staminaPerLevelOfVigourEffect = 25;
 
     @Config(min = 0)
     @Label(name = "Stamina consumed on sprint", description = "How much stamina the player consumes each tick when sprinting")
@@ -67,7 +85,16 @@ public class StaminaFeature extends Feature {
     @Config(min = 0)
     @Label(name = "Stamina consumed on swimming", description = "How much stamina the player consumes each tick when swimming")
     public static Double staminaConsumedOnSwimming = 0.5d;
+    @Config(min = 0)
+    @Label(name = "Conduit swimming modifier", description = "Multiplier for stamina consumed when the player is swimming with the conduit power effect.")
+    public static Double conduitSwimmingModifier = 0.85d;
 
+    @Config(min = 0)
+    @Label(name = "Increased regen above health", description = "If player's max health is above this value, the regeneration speed is increased at the point that regenerating full stamina requires the same time. Set to 0 to disable")
+    public static Integer increasedRegenAboveHealth = 20;
+    @Config(min = 0, max = 1d)
+    @Label(name = "Lock Stamina below health ratio", description = "When max stamina goes below this percentage stamina will be locked")
+    public static Double lockStaminaBelowHealthRatio = 0.25d;
     @Config(min = 0, max = 1d)
     @Label(name = "Unlock Stamina at health ratio", description = "At which health percentage will stamina be unlocked")
     public static Double unlockStaminaAtHealthRatio = 0.5d;
@@ -102,6 +129,16 @@ public class StaminaFeature extends Feature {
     }
 
     @SubscribeEvent
+    public static void addAttribute(EntityAttributeModificationEvent event) {
+        for (EntityType<? extends LivingEntity> entityType : event.getTypes()) {
+            if (event.has(entityType, BONUS_STAMINA_ATTRIBUTE.get()))
+                continue;
+
+            event.add(entityType, BONUS_STAMINA_ATTRIBUTE.get());
+        }
+    }
+
+    @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (!this.isEnabled()
                 || !(event.player instanceof ServerPlayer player)
@@ -113,6 +150,7 @@ public class StaminaFeature extends Feature {
 
         float maxStamina = StaminaHandler.getMaxStamina(player);
         float stamina = StaminaHandler.getStamina(player);
+        float staminaPercentage = stamina / maxStamina;
         boolean isStaminaLocked = StaminaHandler.isStaminaLocked(player);
 
         //Trigger sync for newly spawned players
@@ -128,18 +166,15 @@ public class StaminaFeature extends Feature {
                     percIncrease += staminaModifier.consumedStaminaModifier(instance.getAmplifier());
             }
             staminaToConsume += (staminaToConsume * percIncrease);
-            /*int vigourEnchLvl = EnchantmentHelper.getEnchantmentLevel(VIGOUR.get(), player);
-            if (vigourEnchLvl > 0)
-                staminaToConsume *= (1 - (vigourEnchLvl * 0.10f + 0.10f));*/
             if (player.getPose() == Pose.SWIMMING && player.hasEffect(MobEffects.CONDUIT_POWER))
-                staminaToConsume *= 0.9f;
-            //staminaToConsume = ITREventFactory.onStaminaConsumed(player, staminaToConsume);
+                staminaToConsume *= conduitSwimmingModifier.floatValue();
+            staminaToConsume = SEventFactory.onStaminaConsumed(player, staminaToConsume);
             if (staminaToConsume == 0)
                 return;
             StaminaHandler.consumeStamina(player, staminaToConsume);
             shouldSync = true;
         }
-        else if ((stamina != maxStamina && maxStamina >= staminaPerHalfHeart * 5)) {
+        else if ((stamina != maxStamina && maxStamina >= lockStaminaBelowHealthRatio)) {
             float staminaToRecover = staminaRegenPerTick.floatValue();
             //Slower regeneration if stamina is locked
             if (isStaminaLocked)
@@ -151,28 +186,28 @@ public class StaminaFeature extends Feature {
                     percIncrease += staminaModifier.regenStaminaModifier(instance.getAmplifier());
             }
             //If max health is higher than 20 then increase stamina regen
-            if (maxStamina > staminaPerHalfHeart * 20) {
-                percIncrease += (maxStamina - staminaPerHalfHeart * 20) / (staminaPerHalfHeart * 20);
+            if (increasedRegenAboveHealth > 0 && maxStamina > staminaPerHalfHeart * increasedRegenAboveHealth) {
+                percIncrease += (maxStamina - staminaPerHalfHeart * increasedRegenAboveHealth) / (staminaPerHalfHeart * increasedRegenAboveHealth);
             }
             staminaToRecover += (staminaToRecover * percIncrease);
 
-            //staminaToRecover = ITREventFactory.onStaminaRegenerated(player, staminaToRecover);
+            staminaToRecover = SEventFactory.onStaminaRegenerated(player, staminaToRecover);
             if (staminaToRecover == 0)
                 return;
             stamina = StaminaHandler.regenStamina(player, staminaToRecover);
-            if (isStaminaLocked && stamina >= maxStamina * unlockStaminaAtHealthRatio) {
+            if (isStaminaLocked && staminaPercentage >= unlockStaminaAtHealthRatio) {
                 StaminaHandler.unlockSprinting(player);
                 isStaminaLocked = false;
             }
             shouldSync = true;
         }
-        else if (!isStaminaLocked && maxStamina < staminaPerHalfHeart * 5) {
+        else if (!isStaminaLocked && staminaPercentage < lockStaminaBelowHealthRatio) {
             StaminaHandler.setStamina(player, 0);
             StaminaHandler.lockSprinting(player);
             isStaminaLocked = true;
             shouldSync = true;
         }
-        slowdown(player, stamina, stamina / maxStamina, isStaminaLocked);
+        slowdown(player, stamina, staminaPercentage, isStaminaLocked);
 
         if (shouldSync) {
             //Sync stamina to client
@@ -214,9 +249,6 @@ public class StaminaFeature extends Feature {
                 percIncrease += staminaModifier.consumedStaminaModifier(instance.getAmplifier());
         }
         consumed += (consumed * percIncrease);
-        /*int vigourEnchLvl = EnchantmentHelper.getEnchantmentLevel(VIGOUR.get(), player);
-        if (vigourEnchLvl > 0)
-            consumed *= 1 - (vigourEnchLvl * 0.10f + 0.10f);*/
         StaminaHandler.consumeStamina(player, consumed);
     }
 
@@ -230,7 +262,6 @@ public class StaminaFeature extends Feature {
     }
 
     private static final Vec2 UV_STAMINA = new Vec2(0, 9);
-    protected static final RandomSource RANDOM = RandomSource.create();
 
     @OnlyIn(Dist.CLIENT)
     public static void renderStamina(ForgeGui gui, GuiGraphics guiGraphics) {
@@ -238,7 +269,7 @@ public class StaminaFeature extends Feature {
         Player player = mc.player;
         assert player != null;
 
-        RANDOM.setSeed(gui.getGuiTicks() * 312871L);
+        ((GuiAccesor) gui).getRandom().setSeed(gui.getGuiTicks() * 312871L);
 
         int health = Mth.ceil(player.getHealth());
         int healthLast = ((GuiAccesor)gui).getDisplayHealth();
@@ -246,9 +277,10 @@ public class StaminaFeature extends Feature {
         AttributeInstance attrMaxHealth = player.getAttribute(Attributes.MAX_HEALTH);
         float healthMax = Math.max((float) attrMaxHealth.getValue(), Math.max(healthLast, health));
         int healthMaxI = Mth.ceil(healthMax);
-        int absorb = Mth.ceil(player.getAbsorptionAmount());
+        int absorp = Mth.ceil(player.getAbsorptionAmount());
+        int halfAbsorp = Mth.ceil(player.getAbsorptionAmount() / 2);
 
-        int healthRows = Mth.ceil((healthMax + absorb) / 2.0F / 10.0F);
+        int healthRows = Mth.ceil((healthMax + absorp) / 2.0F / 10.0F);
         int rowHeight = Math.max(10 - (healthRows - 2), 3);
         int leftHeight = gui.leftHeight;
         leftHeight -= (healthRows * rowHeight);
@@ -257,6 +289,7 @@ public class StaminaFeature extends Feature {
 
         int right = mc.getWindow().getGuiScaledWidth() / 2 - 91;
         int top = mc.getWindow().getGuiScaledHeight() - leftHeight;
+        float staminaPerHalfHeart = StaminaHandler.getMaxStamina(player) / health;
         int halfHeartsMaxStamina = Mth.ceil(StaminaHandler.getMaxStamina(player) / staminaPerHalfHeart);
         int halfHeartsStamina = Mth.ceil(StaminaHandler.getStamina(player) / staminaPerHalfHeart);
         int height = 9;
@@ -264,21 +297,28 @@ public class StaminaFeature extends Feature {
         if (player.hasEffect(MobEffects.REGENERATION))
             regen = gui.getGuiTicks() % Mth.ceil(healthMax + 5.0F);
 
-        /*if (StaminaHandler.isStaminaLocked(player))
+        if (StaminaHandler.isStaminaLocked(player))
             ClientUtils.setRenderColor(0.8f, 0.8f, 0.8f, .8f);
         else
-            ClientUtils.setRenderColor(1f, 1f, 1f, 0.5f);*/
-        int jiggle = 0;
+            ClientUtils.setRenderColor(1f, 1f, 1f, 0.5f);
+        int oldJiggle = 0;
+
+        for (int a = 0; a < halfAbsorp; a++) {
+            ((GuiAccesor) gui).getRandom().nextInt(2);
+        }
 
         for (int hp = healthMaxI - 1; hp >= 0; hp--) {
             //Doesn't work with absorption ...
+            int jiggle = 0;
             if ((hp + 1) % 2 == 0) {
-                if (health + absorb <= 4)
-                    jiggle = RANDOM.nextInt(2);
-                //TODO ...
-                /*if (hp + 1 == regen)
-                    jiggle -= 2;*/
+                if (hp / 2 == regen)
+                    jiggle -= 2;
+                if (health + absorp <= 4)
+                    jiggle += ((GuiAccesor) gui).getRandom().nextInt(2);
+                oldJiggle = jiggle;
             }
+            else
+                jiggle = oldJiggle;
             if (hp >= halfHeartsMaxStamina || hp < halfHeartsStamina)
                 continue;
             int v = (int) UV_STAMINA.y;
@@ -297,7 +337,7 @@ public class StaminaFeature extends Feature {
 
             guiGraphics.blit(GUI_ICONS, right + (hp / 2 * 8) + r - (hp / 20 * 80), top - (hp / 20 * rowHeight) + jiggle, u, v, width, height, 9, 9);
         }
-        //ClientUtils.resetRenderColor();
+        ClientUtils.resetRenderColor();
     }
 
     @OnlyIn(Dist.CLIENT)
