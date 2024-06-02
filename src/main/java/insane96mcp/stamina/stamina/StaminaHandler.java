@@ -1,4 +1,4 @@
-package insane96mcp.stamina;
+package insane96mcp.stamina.stamina;
 
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;

@@ -1,4 +1,4 @@
-package insane96mcp.stamina;
+package insane96mcp.stamina.stamina;
 
 import insane96mcp.insanelib.base.Feature;
 import insane96mcp.insanelib.base.Label;
@@ -7,6 +7,7 @@ import insane96mcp.insanelib.base.config.Config;
 import insane96mcp.insanelib.base.config.LoadFeature;
 import insane96mcp.insanelib.event.PlayerSprintEvent;
 import insane96mcp.insanelib.util.MCUtils;
+import insane96mcp.stamina.Stamina;
 import insane96mcp.stamina.mixin.GuiAccesor;
 import insane96mcp.stamina.network.NetworkHandler;
 import insane96mcp.stamina.network.StaminaSync;
@@ -255,7 +256,7 @@ public class StaminaFeature extends Feature {
             leftHeight -= 10 - rowHeight;
 
         int right = mc.getWindow().getGuiScaledWidth() / 2 - 91;
-        int top = mc.getWindow().getGuiScaledHeight() - leftHeight - 1;
+        int top = mc.getWindow().getGuiScaledHeight() - leftHeight;
         int halfHeartsMaxStamina = Mth.ceil(StaminaHandler.getMaxStamina(player) / staminaPerHalfHeart);
         int halfHeartsStamina = Mth.ceil(StaminaHandler.getStamina(player) / staminaPerHalfHeart);
         int height = 9;

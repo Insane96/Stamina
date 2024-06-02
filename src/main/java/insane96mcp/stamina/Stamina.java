@@ -3,6 +3,8 @@ package insane96mcp.stamina;
 import com.mojang.logging.LogUtils;
 import insane96mcp.insanelib.base.Module;
 import insane96mcp.stamina.network.NetworkHandler;
+import insane96mcp.stamina.setup.SCommonConfig;
+import insane96mcp.stamina.stamina.StaminaFeature;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;

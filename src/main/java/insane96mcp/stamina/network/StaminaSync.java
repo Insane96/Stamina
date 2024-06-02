@@ -1,6 +1,6 @@
 package insane96mcp.stamina.network;
 
-import insane96mcp.stamina.StaminaFeature;
+import insane96mcp.stamina.stamina.StaminaFeature;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 

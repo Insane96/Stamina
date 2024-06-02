@@ -1,6 +1,7 @@
-package insane96mcp.stamina;
+package insane96mcp.stamina.setup;
 
 import insane96mcp.insanelib.base.Module;
+import insane96mcp.stamina.Stamina;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ModConfig;
 import org.apache.commons.lang3.tuple.Pair;
