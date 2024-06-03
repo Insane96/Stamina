@@ -12,7 +12,7 @@ import insane96mcp.stamina.Stamina;
 import insane96mcp.stamina.effect.VigourEffect;
 import insane96mcp.stamina.enchantment.VigourEnchantment;
 import insane96mcp.stamina.event.SEventFactory;
-import insane96mcp.stamina.mixin.GuiAccesor;
+import insane96mcp.stamina.mixin.GuiAccessor;
 import insane96mcp.stamina.network.NetworkHandler;
 import insane96mcp.stamina.network.StaminaSync;
 import insane96mcp.stamina.setup.SRegistries;
@@ -269,10 +269,10 @@ public class StaminaFeature extends Feature {
         Player player = mc.player;
         assert player != null;
 
-        ((GuiAccesor) gui).getRandom().setSeed(gui.getGuiTicks() * 312871L);
+        ((GuiAccessor) gui).getRandom().setSeed(gui.getGuiTicks() * 312871L);
 
         int health = Mth.ceil(player.getHealth());
-        int healthLast = ((GuiAccesor)gui).getDisplayHealth();
+        int healthLast = ((GuiAccessor)gui).getDisplayHealth();
 
         AttributeInstance attrMaxHealth = player.getAttribute(Attributes.MAX_HEALTH);
         float healthMax = Math.max((float) attrMaxHealth.getValue(), Math.max(healthLast, health));
@@ -304,7 +304,7 @@ public class StaminaFeature extends Feature {
         int oldJiggle = 0;
 
         for (int a = 0; a < halfAbsorp; a++) {
-            ((GuiAccesor) gui).getRandom().nextInt(2);
+            ((GuiAccessor) gui).getRandom().nextInt(2);
         }
 
         for (int hp = healthMaxI - 1; hp >= 0; hp--) {
@@ -314,7 +314,7 @@ public class StaminaFeature extends Feature {
                 if (hp / 2 == regen)
                     jiggle -= 2;
                 if (health + absorp <= 4)
-                    jiggle += ((GuiAccesor) gui).getRandom().nextInt(2);
+                    jiggle += ((GuiAccessor) gui).getRandom().nextInt(2);
                 oldJiggle = jiggle;
             }
             else
