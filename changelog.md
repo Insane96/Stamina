@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.1
+* Fixed startup crash
+
 ## 1.0.0
 * Ported from IguanaTweaks Reborn
 * Added `stamina:bonus_stamina` attribute
