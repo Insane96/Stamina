@@ -121,8 +121,11 @@ public class StaminaFeature extends Feature {
     public static Boolean slowdownOnlyWhenLocked = true;
 
     @Config
-    @Label(name = "Disable Sprinting", description = "Disable sprinting (and swimming) altogether")
+    @Label(name = "Disable Sprinting", description = "Disable sprinting altogether")
     public static Boolean disableSprinting = false;
+    @Config
+    @Label(name = "Disable Swimming", description = "Disable swimming altogether")
+    public static Boolean disableSwimming = false;
 
     public StaminaFeature(Module module, boolean enabledByDefault, boolean canBeDisabled) {
         super(module, enabledByDefault, canBeDisabled);
@@ -143,7 +146,7 @@ public class StaminaFeature extends Feature {
         if (!this.isEnabled()
                 || !(event.player instanceof ServerPlayer player)
                 || event.phase.equals(TickEvent.Phase.START)
-                || disableSprinting)
+                || disableSprinting && disableSwimming)
             return;
 
         boolean shouldSync = false;
@@ -231,7 +234,7 @@ public class StaminaFeature extends Feature {
                 || event.getPlayer().getAbilities().instabuild)
             return;
 
-        if (!StaminaHandler.canSprint(event.getPlayer()) || disableSprinting)
+        if (!StaminaHandler.canSprint(event.getPlayer()) || (disableSprinting && !event.getPlayer().canStartSwimming()) || (disableSwimming && event.getPlayer().canStartSwimming()))
             event.setCanceled(true);
     }
 

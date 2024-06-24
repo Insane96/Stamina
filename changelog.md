@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.2
+* Added a config option to disable swimming (split from sprinting)
+
 ## 1.0.1
 * Fixed startup crash
 
