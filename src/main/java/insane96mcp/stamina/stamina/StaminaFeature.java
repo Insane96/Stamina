@@ -42,6 +42,7 @@ import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.registries.RegistryObject;
@@ -250,6 +251,14 @@ public class StaminaFeature extends Feature {
         }
         consumed += (consumed * percIncrease);
         StaminaHandler.consumeStamina(player, consumed);
+    }
+
+    @SubscribeEvent
+    public void onPlayerChangeDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player))
+            return;
+        Object msg = new StaminaSync((int) StaminaHandler.getStamina(player), StaminaHandler.isStaminaLocked(player));
+        NetworkHandler.CHANNEL.sendTo(msg, player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
     }
 
     @OnlyIn(Dist.CLIENT)

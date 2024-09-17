@@ -2,6 +2,7 @@
 
 ## Upcoming
 * Config options have been sorted better
+* Fixed stamina not synced when switching dimensions
 
 ## 1.0.2
 * Added a config option to disable swimming (split from sprinting)
