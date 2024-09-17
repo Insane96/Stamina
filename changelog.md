@@ -1,5 +1,8 @@
 # Changelog
 
+## Upcoming
+* Config options have been sorted better
+
 ## 1.0.2
 * Added a config option to disable swimming (split from sprinting)
 

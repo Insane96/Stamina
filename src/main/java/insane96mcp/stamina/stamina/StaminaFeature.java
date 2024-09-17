@@ -65,47 +65,44 @@ public class StaminaFeature extends Feature {
     public static final RegistryObject<Attribute> BONUS_STAMINA_ATTRIBUTE = SRegistries.ATTRIBUTES.register("bonus_stamina", () -> (new RangedAttribute("attribute.name.bonus_stamina", 0, -Double.MAX_VALUE, Double.MAX_VALUE)).setSyncable(true));
 
     @Config(min = 0)
-    @Label(name = "Stamina per half heart", description = "How much stamina the player has per half heart. Each 1 stamina is 1 tick of running")
+    @Label(name = "Stats.Stamina per half heart", description = "How much stamina the player has per half heart. Each 1 stamina is 1 tick of running")
     public static Integer staminaPerHalfHeart = 5;
     @Config(min = 0)
-    @Label(name = "Bonus stamina per level of Vigour Enchantment")
+    @Label(name = "Stats.Bonus stamina per level of Vigour Enchantment")
     public static Integer staminaPerLevelOfVigourEnchantment = 25;
     @Config(min = 0)
-    @Label(name = "Bonus stamina per level of Vigour Effect")
+    @Label(name = "Stats.Bonus stamina per level of Vigour Effect")
     public static Integer staminaPerLevelOfVigourEffect = 25;
 
     @Config(min = 0)
-    @Label(name = "Stamina consumed on sprint", description = "How much stamina the player consumes each tick when sprinting")
+    @Label(name = "Consumption.Sprint", description = "How much stamina the player consumes each tick when sprinting")
     public static Double staminaConsumedOnSprint = 1d;
-
     @Config(min = 0)
-    @Label(name = "Stamina consumed on jump", description = "How much stamina the player consumes on each jump")
+    @Label(name = "Consumption.Jump", description = "How much stamina the player consumes on each jump")
     public static Integer staminaConsumedOnJump = 5;
-
     @Config(min = 0)
-    @Label(name = "Stamina consumed on swimming", description = "How much stamina the player consumes each tick when swimming")
+    @Label(name = "Consumption.Swim", description = "How much stamina the player consumes each tick when swimming")
     public static Double staminaConsumedOnSwimming = 0.5d;
     @Config(min = 0)
-    @Label(name = "Conduit swimming modifier", description = "Multiplier for stamina consumed when the player is swimming with the conduit power effect.")
+    @Label(name = "Consumption.Conduit swimming modifier", description = "Multiplier for stamina consumed when the player is swimming with the conduit power effect.")
     public static Double conduitSwimmingModifier = 0.85d;
 
+    @Config(min = 0d)
+    @Label(name = "Regen.Per Tick")
+    public static Double staminaRegenPerTick = 0.6d;
     @Config(min = 0)
-    @Label(name = "Increased regen above health", description = "If player's max health is above this value, the regeneration speed is increased at the point that regenerating full stamina requires the same time. Set to 0 to disable")
+    @Label(name = "Regen.Increased above health", description = "If player's max health is above this value, the regeneration speed is increased at the point that regenerating full stamina requires the same time as if the player would be at this max health. Set to 0 to disable")
     public static Integer increasedRegenAboveHealth = 20;
+    @Config(min = 0d)
+    @Label(name = "Regen.Modifier when locked", description = "Multiplier for the regen per tick when stamina is locked")
+    public static Double staminaRegenPerTickIfLocked = 0.6d;
+
     @Config(min = 0, max = 1d)
-    @Label(name = "Lock Stamina below health ratio", description = "When max stamina goes below this percentage stamina will be locked")
+    @Label(name = "Lock.Below health ratio", description = "When max stamina goes below this percentage, stamina will be locked. With locked stamina, the player can't sprint")
     public static Double lockStaminaBelowHealthRatio = 0.25d;
     @Config(min = 0, max = 1d)
-    @Label(name = "Unlock Stamina at health ratio", description = "At which health percentage will stamina be unlocked")
+    @Label(name = "Lock.Unlock at health ratio", description = "At which health percentage will stamina be unlocked")
     public static Double unlockStaminaAtHealthRatio = 0.5d;
-
-    @Config(min = 0d)
-    @Label(name = "Stamina regen per tick")
-    public static Double staminaRegenPerTick = 0.6d;
-
-    @Config(min = 0d)
-    @Label(name = "Stamina regen per tick if locked")
-    public static Double staminaRegenPerTickIfLocked = 0.35d;
 
     @Config(min = 0, max = 1)
     @Label(name = "Slowdown.Threshold", description = "Below this percentage stamina you'll get slowed down.")
@@ -121,10 +118,10 @@ public class StaminaFeature extends Feature {
     public static Boolean slowdownOnlyWhenLocked = true;
 
     @Config
-    @Label(name = "Disable Sprinting", description = "Disable sprinting altogether")
+    @Label(name = "Disable.Sprinting", description = "Disable sprinting altogether")
     public static Boolean disableSprinting = false;
     @Config
-    @Label(name = "Disable Swimming", description = "Disable swimming altogether")
+    @Label(name = "Disable.Swimming", description = "Disable swimming altogether")
     public static Boolean disableSwimming = false;
 
     public StaminaFeature(Module module, boolean enabledByDefault, boolean canBeDisabled) {
