@@ -53,7 +53,8 @@ public class StaminaFeature extends Feature {
     public static final RegistryObject<MobEffect> VIGOUR_EFFECT = SRegistries.MOB_EFFECTS.register("vigour", () -> new VigourEffect(MobEffectCategory.BENEFICIAL, 0xFCD373));
     public static final ResourceLocation GUI_ICONS = new ResourceLocation(Stamina.MOD_ID, "textures/gui/icons.png");
 
-    public static final UUID SLOWDOWN_UUID = UUID.fromString("b17cbf02-97f8-4c50-9cd1-6dc732593fed");
+    public static final UUID LOCK_SLOWDOWN_UUID = UUID.fromString("b17cbf02-97f8-4c50-9cd1-6dc732593fed");
+    public static final UUID SPRINT_SLOWDOWN_UUID = UUID.fromString("d5c66a92-3f1f-44a2-95a6-1a9e66c6d8e5");
 
     public static final String STAMINA = Stamina.RESOURCE_PREFIX + "stamina";
     public static final String STAMINA_LOCKED = Stamina.RESOURCE_PREFIX + "stamina_locked";
@@ -104,17 +105,20 @@ public class StaminaFeature extends Feature {
     public static Double unlockStaminaAtHealthRatio = 0.5d;
 
     @Config(min = 0, max = 1)
-    @Label(name = "Slowdown.Threshold", description = "Below this percentage stamina you'll get slowed down.")
-    public static Double slowdownThreshold = 0d;
-    @Config(min = 0)
-    @Label(name = "Slowdown.Flat Threshold", description = "Below this stamina you'll get slowed down.")
-    public static Double slowdownFlatThreshold = 0d;
-    @Config(min = 0)
-    @Label(name = "Slowdown.When Locked", description = "If stamina is locked, player will be slowed down.")
-    public static Boolean slowdownWhenLocked = false;
-    @Config(min = -1)
-    @Label(name = "Slowdown.Amount")
-    public static Double slowdownAmount = -0.2;
+    @Label(name = "Slowdown.Sprinting.Threshold", description = "Below this percentage stamina, sprinting will be less effective.")
+    public static Double slowdownSprintingThreshold = 0.25d;
+    @Config
+    @Label(name = "Slowdown.Sprinting.Threshold Flat", description = "Below this stamina amount, sprinting will be less effective.")
+    public static Double slowdownSprintingThresholdFlat = 25d;
+    @Config(min = -1, max = 0)
+    @Label(name = "Slowdown.Sprinting.Amount", description = "Note, this adds an attribute modifier with operation MULTIPLY_TOTAL, vanilla sprint is x1.3")
+    public static Double slowdownSprintingAmount = -0.15;
+    @Config
+    @Label(name = "Slowdown.When Locked.Enabled", description = "If stamina is locked, player will be slowed down.")
+    public static Boolean slowdownLocked = true;
+    @Config(min = -1, max = 0)
+    @Label(name = "Slowdown.When Locked.Amount")
+    public static Double slowdownLockedAmount = -0.1;
 
     @Config
     @Label(name = "Disable.Sprinting", description = "Disable sprinting altogether")
@@ -179,7 +183,7 @@ public class StaminaFeature extends Feature {
             float staminaToRecover = staminaRegenPerTick.floatValue();
             //Slower regeneration if stamina is locked
             if (isStaminaLocked)
-                staminaToRecover = staminaRegenPerTickIfLocked.floatValue();
+                staminaToRecover *= staminaRegenPerTickIfLocked.floatValue();
             float percIncrease = 0f;
 
             for (MobEffectInstance instance : player.getActiveEffects()) {
@@ -208,19 +212,31 @@ public class StaminaFeature extends Feature {
             isStaminaLocked = true;
             shouldSync = true;
         }
-        slowdown(player, stamina, staminaPercentage, isStaminaLocked);
+        slowdown(player, maxStaminaPercentage, staminaPercentage, stamina, isStaminaLocked);
 
         if (shouldSync)
             StaminaSync.sync(player);
     }
 
-    public static void slowdown(Player player, float stamina, float staminaPercentage, boolean isLocked) {
-        player.getAttribute(Attributes.MOVEMENT_SPEED).removeModifier(SLOWDOWN_UUID);
+    public static void slowdown(Player player, float maxStaminaPercentage, float staminaPercentage, float stamina, boolean isLocked) {
+        slowdownLocked(player, isLocked);
+        slowdownSprinting(player, staminaPercentage, stamina);
+    }
+
+    private static void slowdownLocked(Player player, boolean isLocked) {
+        player.getAttribute(Attributes.MOVEMENT_SPEED).removeModifier(LOCK_SLOWDOWN_UUID);
         if (!isLocked
-                || !slowdownWhenLocked
-                || staminaPercentage > slowdownThreshold && stamina > slowdownFlatThreshold)
+                || !slowdownLocked)
             return;
-        MCUtils.applyModifier(player, Attributes.MOVEMENT_SPEED, SLOWDOWN_UUID, "Stamina slowdown", slowdownAmount, AttributeModifier.Operation.MULTIPLY_BASE, false);
+        MCUtils.applyModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_UUID, "Stamina locked slowdown", slowdownLockedAmount, AttributeModifier.Operation.MULTIPLY_BASE, false);
+    }
+
+    private static void slowdownSprinting(Player player, float staminaPercentage, float stamina) {
+        player.getAttribute(Attributes.MOVEMENT_SPEED).removeModifier(SPRINT_SLOWDOWN_UUID);
+        if (!player.isSprinting()
+                || stamina >= slowdownSprintingThresholdFlat && staminaPercentage >= slowdownSprintingThreshold)
+            return;
+        MCUtils.applyModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_UUID, "Stamina sprinting slowdown", slowdownSprintingAmount, AttributeModifier.Operation.MULTIPLY_TOTAL, false);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -278,7 +294,7 @@ public class StaminaFeature extends Feature {
         ((GuiAccessor) gui).getRandom().setSeed(gui.getGuiTicks() * 312871L);
 
         int health = Mth.ceil(player.getHealth());
-        int healthLast = ((GuiAccessor)gui).getDisplayHealth();
+        int healthLast = ((GuiAccessor) gui).getDisplayHealth();
 
         AttributeInstance attrMaxHealth = player.getAttribute(Attributes.MAX_HEALTH);
         float healthMax = Math.max((float) attrMaxHealth.getValue(), Math.max(healthLast, health));
