@@ -3,6 +3,8 @@
 ## Upcoming
 * Config options have been sorted and categorized
   * Stamina regen when locked is now a modifier
+* Added experimental config option to consume stamina when mining
+  * Disabled by default. When stamina is locked, mining speed is halved
 * Changed slowdown mechanic
   * When the stamina is locked the player is now slowed down by 10%, no more thresholds
   * When the player is sprinting and stamina is below 25% or below 25, sprinting will be less effective (33%)

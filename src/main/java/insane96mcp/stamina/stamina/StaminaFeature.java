@@ -45,6 +45,8 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.registries.RegistryObject;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Label(name = "Stamina", description = "Stamina to let the player run and do stuff.")
@@ -86,6 +88,9 @@ public class StaminaFeature extends Feature {
     @Config(min = 0)
     @Label(name = "Consumption.Conduit swimming modifier", description = "Multiplier for stamina consumed when the player is swimming with the conduit power effect.")
     public static Double conduitSwimmingModifier = 0.85d;
+    @Config(min = 0)
+    @Label(name = "Consumption.Mine", description = "How much stamina the player consumes each tick when mining. If stamina is locked, mining speed is halved")
+    public static Double consumptionMine = 0d;
 
     @Config(min = 0d)
     @Label(name = "Regen.Per Tick")
@@ -143,8 +148,7 @@ public class StaminaFeature extends Feature {
 
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (!this.isEnabled()
-                || !(event.player instanceof ServerPlayer player)
+        if (!(event.player instanceof ServerPlayer player)
                 || event.phase.equals(TickEvent.Phase.START)
                 || (disableSprinting && disableSwimming))
             return;
@@ -179,7 +183,7 @@ public class StaminaFeature extends Feature {
             StaminaHandler.consumeStamina(player, staminaToConsume);
             shouldSync = true;
         }
-        else if (stamina != maxStamina && maxStaminaPercentage >= lockStaminaBelowHealthRatio) {
+        else if (!isMining(player) && stamina != maxStamina && maxStaminaPercentage >= lockStaminaBelowHealthRatio) {
             float staminaToRecover = staminaRegenPerTick.floatValue();
             //Slower regeneration if stamina is locked
             if (isStaminaLocked)
@@ -214,7 +218,7 @@ public class StaminaFeature extends Feature {
         }
         slowdown(player, maxStaminaPercentage, staminaPercentage, stamina, isStaminaLocked);
 
-        if (shouldSync)
+        if (isMining(player) || shouldSync)
             StaminaSync.sync(player);
     }
 
@@ -237,6 +241,27 @@ public class StaminaFeature extends Feature {
                 || stamina >= slowdownSprintingThresholdFlat && staminaPercentage >= slowdownSprintingThreshold)
             return;
         MCUtils.applyModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_UUID, "Stamina sprinting slowdown", slowdownSprintingAmount, AttributeModifier.Operation.MULTIPLY_TOTAL, false);
+    }
+
+    private static final Map<ServerPlayer, Integer> tickMined = new HashMap<>();
+
+    @SubscribeEvent
+    public void onBreakSpeed(PlayerEvent.BreakSpeed event) {
+        if (consumptionMine == 0)
+            return;
+        Player player = event.getEntity();
+
+        if (StaminaHandler.isStaminaLocked(player)) {
+            event.setNewSpeed(event.getNewSpeed() * 0.5f);
+        }
+        else if (player instanceof ServerPlayer serverPlayer && StaminaHandler.getStamina(player) > 0) {
+            StaminaHandler.consumeStamina(player, consumptionMine.floatValue());
+            tickMined.put(serverPlayer, player.tickCount);
+        }
+    }
+
+    public static boolean isMining(ServerPlayer player) {
+        return tickMined.containsKey(player) && player.tickCount < tickMined.get(player) + 8;
     }
 
     @OnlyIn(Dist.CLIENT)
