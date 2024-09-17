@@ -1,6 +1,6 @@
 # Changelog
 
-## Upcoming
+## 1.1.0
 * Config options have been sorted and categorized
   * Stamina regen when locked is now a modifier
 * Added experimental config option to consume stamina when mining
@@ -9,7 +9,7 @@
   * When the stamina is locked the player is now slowed down by 10%, no more thresholds
   * When the player is sprinting and stamina is below 25% or below 25, sprinting will be less effective (33%)
 * Fixed stamina not synced when switching dimensions
-* Fixed stamina not locked below 2.5 max health
+* Fixed stamina not locked below 5 max health
 
 ## 1.0.2
 * Added a config option to disable swimming (split from sprinting)
