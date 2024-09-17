@@ -13,7 +13,6 @@ import insane96mcp.stamina.effect.VigourEffect;
 import insane96mcp.stamina.enchantment.VigourEnchantment;
 import insane96mcp.stamina.event.SEventFactory;
 import insane96mcp.stamina.mixin.GuiAccessor;
-import insane96mcp.stamina.network.NetworkHandler;
 import insane96mcp.stamina.network.StaminaSync;
 import insane96mcp.stamina.setup.SRegistries;
 import net.minecraft.client.Minecraft;
@@ -44,7 +43,6 @@ import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.registries.RegistryObject;
 
 import java.util.UUID;
@@ -111,12 +109,12 @@ public class StaminaFeature extends Feature {
     @Config(min = 0)
     @Label(name = "Slowdown.Flat Threshold", description = "Below this stamina you'll get slowed down.")
     public static Double slowdownFlatThreshold = 0d;
+    @Config(min = 0)
+    @Label(name = "Slowdown.When Locked", description = "If stamina is locked, player will be slowed down.")
+    public static Boolean slowdownWhenLocked = false;
     @Config(min = -1)
     @Label(name = "Slowdown.Amount")
     public static Double slowdownAmount = -0.2;
-    @Config
-    @Label(name = "Slowdown.Only when locked")
-    public static Boolean slowdownOnlyWhenLocked = true;
 
     @Config
     @Label(name = "Disable.Sprinting", description = "Disable sprinting altogether")
@@ -144,20 +142,22 @@ public class StaminaFeature extends Feature {
         if (!this.isEnabled()
                 || !(event.player instanceof ServerPlayer player)
                 || event.phase.equals(TickEvent.Phase.START)
-                || disableSprinting && disableSwimming)
+                || (disableSprinting && disableSwimming))
             return;
 
         boolean shouldSync = false;
 
-        float maxStamina = StaminaHandler.getMaxStamina(player);
+        float maxPossibleStamina = StaminaHandler.getMaxPossibleStamina(player);
+        float maxStamina = StaminaHandler.getMaxStamina(player, maxPossibleStamina);
         float stamina = StaminaHandler.getStamina(player);
+        float maxStaminaPercentage = maxStamina / maxPossibleStamina;
         float staminaPercentage = stamina / maxStamina;
         boolean isStaminaLocked = StaminaHandler.isStaminaLocked(player);
 
         //Trigger sync for newly spawned players
         if (player.tickCount == 1)
             shouldSync = true;
-        if (player.isSprinting() && player.getVehicle() == null && !player.getAbilities().instabuild && !player.isSpectator()) {
+        if (player.isSprinting() && player.getVehicle() == null && !player.isCreative() && !player.isSpectator()) {
             float staminaToConsume = staminaConsumedOnSprint.floatValue();
             if (player.getPose() == Pose.SWIMMING)
                 staminaToConsume = staminaConsumedOnSwimming.floatValue();
@@ -175,7 +175,7 @@ public class StaminaFeature extends Feature {
             StaminaHandler.consumeStamina(player, staminaToConsume);
             shouldSync = true;
         }
-        else if ((stamina != maxStamina && maxStamina >= lockStaminaBelowHealthRatio)) {
+        else if (stamina != maxStamina && maxStaminaPercentage >= lockStaminaBelowHealthRatio) {
             float staminaToRecover = staminaRegenPerTick.floatValue();
             //Slower regeneration if stamina is locked
             if (isStaminaLocked)
@@ -202,7 +202,7 @@ public class StaminaFeature extends Feature {
             }
             shouldSync = true;
         }
-        else if (!isStaminaLocked && staminaPercentage < lockStaminaBelowHealthRatio) {
+        else if (!isStaminaLocked && maxStaminaPercentage < lockStaminaBelowHealthRatio) {
             StaminaHandler.setStamina(player, 0);
             StaminaHandler.lockSprinting(player);
             isStaminaLocked = true;
@@ -210,17 +210,15 @@ public class StaminaFeature extends Feature {
         }
         slowdown(player, stamina, staminaPercentage, isStaminaLocked);
 
-        if (shouldSync) {
-            //Sync stamina to client
-            Object msg = new StaminaSync((int) StaminaHandler.getStamina(player), StaminaHandler.isStaminaLocked(player));
-            NetworkHandler.CHANNEL.sendTo(msg, player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
-        }
+        if (shouldSync)
+            StaminaSync.sync(player);
     }
 
     public static void slowdown(Player player, float stamina, float staminaPercentage, boolean isLocked) {
         player.getAttribute(Attributes.MOVEMENT_SPEED).removeModifier(SLOWDOWN_UUID);
-        if ((!isLocked && slowdownOnlyWhenLocked)
-                || (staminaPercentage > slowdownThreshold && stamina > slowdownFlatThreshold))
+        if (!isLocked
+                || !slowdownWhenLocked
+                || staminaPercentage > slowdownThreshold && stamina > slowdownFlatThreshold)
             return;
         MCUtils.applyModifier(player, Attributes.MOVEMENT_SPEED, SLOWDOWN_UUID, "Stamina slowdown", slowdownAmount, AttributeModifier.Operation.MULTIPLY_BASE, false);
     }
@@ -257,8 +255,7 @@ public class StaminaFeature extends Feature {
     public void onPlayerChangeDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player))
             return;
-        Object msg = new StaminaSync((int) StaminaHandler.getStamina(player), StaminaHandler.isStaminaLocked(player));
-        NetworkHandler.CHANNEL.sendTo(msg, player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+        StaminaSync.sync(player);
     }
 
     @OnlyIn(Dist.CLIENT)

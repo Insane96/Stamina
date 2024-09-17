@@ -9,6 +9,9 @@ public class StaminaEvent extends PlayerEvent {
         super(player);
     }
 
+    /**
+     * Called when stamina is about to get consumed, after all the modifiers have been applied
+     */
     public static class Consumed extends StaminaEvent {
 
         private float amount;
@@ -33,6 +36,9 @@ public class StaminaEvent extends PlayerEvent {
         }
     }
 
+    /**
+     * Called when stamina is about to regenerate, after all the modifiers have been applied
+     */
     public static class Regenerated extends StaminaEvent {
 
         private float amount;
