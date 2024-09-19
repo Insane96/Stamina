@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.1
+* Now requires InsaneLib 1.15.0
+
 ## 1.1.0
 * Config options have been sorted and categorized
   * Stamina regen when locked is now a modifier
