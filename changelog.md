@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.2
+* Fixed stamina not starting to regenerate on respawn until you mined a block
+
 ## 1.1.1
 * Now requires InsaneLib 1.15.0
 

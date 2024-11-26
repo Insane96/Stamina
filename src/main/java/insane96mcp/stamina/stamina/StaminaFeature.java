@@ -40,6 +40,7 @@ import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -261,7 +262,16 @@ public class StaminaFeature extends Feature {
     }
 
     public static boolean isMining(ServerPlayer player) {
-        return tickMined.containsKey(player) && player.tickCount < tickMined.get(player) + 8;
+        return Feature.isEnabled(StaminaFeature.class) && tickMined.containsKey(player) && player.tickCount < tickMined.get(player) + 8;
+    }
+
+    @SubscribeEvent
+    public void onDeath(LivingDeathEvent event) {
+        if (!this.isEnabled()
+                || !(event.getEntity() instanceof ServerPlayer player))
+            return;
+
+        tickMined.remove(player);
     }
 
     @OnlyIn(Dist.CLIENT)
