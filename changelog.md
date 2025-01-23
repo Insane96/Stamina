@@ -1,5 +1,12 @@
 # Changelog
 
+## Upcoming
+* Increased default stamina
+  * Stamina per half-heart (5 -> 10)
+  * Bonus stamina per level of Vigour Enchantment (25 -> 40)
+  * Bonus stamina per level of Vigour effect (25 -> 40)
+  * Stamina consumed on jump (5 -> 10)
+
 ## 1.1.2
 * Fixed stamina not starting to regenerate on respawn until you mined a block
 

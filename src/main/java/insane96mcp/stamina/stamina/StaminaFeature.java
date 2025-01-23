@@ -69,20 +69,20 @@ public class StaminaFeature extends Feature {
 
     @Config(min = 0)
     @Label(name = "Stats.Stamina per half heart", description = "How much stamina the player has per half heart. Each 1 stamina is 1 tick of running")
-    public static Integer staminaPerHalfHeart = 5;
+    public static Integer staminaPerHalfHeart = 10;
     @Config(min = 0)
     @Label(name = "Stats.Bonus stamina per level of Vigour Enchantment")
-    public static Integer staminaPerLevelOfVigourEnchantment = 25;
+    public static Integer staminaPerLevelOfVigourEnchantment = 40;
     @Config(min = 0)
     @Label(name = "Stats.Bonus stamina per level of Vigour Effect")
-    public static Integer staminaPerLevelOfVigourEffect = 25;
+    public static Integer staminaPerLevelOfVigourEffect = 40;
 
     @Config(min = 0)
     @Label(name = "Consumption.Sprint", description = "How much stamina the player consumes each tick when sprinting")
     public static Double staminaConsumedOnSprint = 1d;
     @Config(min = 0)
     @Label(name = "Consumption.Jump", description = "How much stamina the player consumes on each jump")
-    public static Integer staminaConsumedOnJump = 5;
+    public static Integer staminaConsumedOnJump = 10;
     @Config(min = 0)
     @Label(name = "Consumption.Swim", description = "How much stamina the player consumes each tick when swimming")
     public static Double staminaConsumedOnSwimming = 0.5d;
