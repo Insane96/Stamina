@@ -95,7 +95,7 @@ public class StaminaFeature extends Feature {
 
     @Config(min = 0d)
     @Label(name = "Regen.Per Tick")
-    public static Double staminaRegenPerTick = 0.6d;
+    public static Double staminaRegenPerTick = 1d;
     @Config(min = 0)
     @Label(name = "Regen.Increased above health", description = "If player's max health is above this value, the regeneration speed is increased at the point that regenerating full stamina requires the same time as if the player would be at this max health. Set to 0 to disable")
     public static Integer increasedRegenAboveHealth = 20;
@@ -105,17 +105,17 @@ public class StaminaFeature extends Feature {
 
     @Config(min = 0, max = 1d)
     @Label(name = "Lock.Below health ratio", description = "When max stamina goes below this percentage, stamina will be locked. With locked stamina, the player can't sprint")
-    public static Double lockStaminaBelowHealthRatio = 0.25d;
+    public static Double lockStaminaBelowHealthRatio = 0.20d;
     @Config(min = 0, max = 1d)
     @Label(name = "Lock.Unlock at health ratio", description = "At which health percentage will stamina be unlocked")
-    public static Double unlockStaminaAtHealthRatio = 0.5d;
+    public static Double unlockStaminaAtHealthRatio = 0.4d;
 
     @Config(min = 0, max = 1)
     @Label(name = "Slowdown.Sprinting.Threshold", description = "Below this percentage stamina, sprinting will be less effective.")
-    public static Double slowdownSprintingThreshold = 0.25d;
+    public static Double slowdownSprintingThreshold = 0.20d;
     @Config
     @Label(name = "Slowdown.Sprinting.Threshold Flat", description = "Below this stamina amount, sprinting will be less effective.")
-    public static Double slowdownSprintingThresholdFlat = 25d;
+    public static Double slowdownSprintingThresholdFlat = 40d;
     @Config(min = -1, max = 0)
     @Label(name = "Slowdown.Sprinting.Amount", description = "Note, this adds an attribute modifier with operation MULTIPLY_TOTAL, vanilla sprint is x1.3")
     public static Double slowdownSprintingAmount = -0.15;
