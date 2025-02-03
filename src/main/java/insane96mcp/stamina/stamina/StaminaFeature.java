@@ -38,6 +38,7 @@ import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
+import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -117,7 +118,7 @@ public class StaminaFeature extends Feature {
     @Label(name = "Slowdown.Sprinting.Threshold Flat", description = "Below this stamina amount, sprinting will be less effective.")
     public static Double slowdownSprintingThresholdFlat = 40d;
     @Config(min = -1, max = 0)
-    @Label(name = "Slowdown.Sprinting.Amount", description = "Note, this adds an attribute modifier with operation MULTIPLY_TOTAL, vanilla sprint is x1.3")
+    @Label(name = "Slowdown.Sprinting.Amount", description = "Slowdown sprinting and swimming by this amount, vanilla sprint is x1.3")
     public static Double slowdownSprintingAmount = -0.15;
     @Config
     @Label(name = "Slowdown.When Locked.Enabled", description = "If stamina is locked, player will be slowed down.")
@@ -233,7 +234,8 @@ public class StaminaFeature extends Feature {
         if (!isLocked
                 || !slowdownLocked)
             return;
-        MCUtils.applyModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_UUID, "Stamina locked slowdown", slowdownLockedAmount, AttributeModifier.Operation.MULTIPLY_BASE, false);
+        MCUtils.applyModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_UUID, "Stamina locked slowdown", slowdownLockedAmount, AttributeModifier.Operation.MULTIPLY_TOTAL, false);
+        MCUtils.applyModifier(player, ForgeMod.SWIM_SPEED.get(), LOCK_SLOWDOWN_UUID, "Stamina locked slowdown", slowdownLockedAmount, AttributeModifier.Operation.MULTIPLY_TOTAL, false);
     }
 
     private static void slowdownSprinting(Player player, float staminaPercentage, float stamina) {
@@ -242,6 +244,7 @@ public class StaminaFeature extends Feature {
                 || stamina >= slowdownSprintingThresholdFlat && staminaPercentage >= slowdownSprintingThreshold)
             return;
         MCUtils.applyModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_UUID, "Stamina sprinting slowdown", slowdownSprintingAmount, AttributeModifier.Operation.MULTIPLY_TOTAL, false);
+        MCUtils.applyModifier(player, ForgeMod.SWIM_SPEED.get(), LOCK_SLOWDOWN_UUID, "Stamina swimming slowdown", slowdownSprintingAmount, AttributeModifier.Operation.MULTIPLY_TOTAL, false);
     }
 
     private static final Map<ServerPlayer, Integer> tickMined = new HashMap<>();

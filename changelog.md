@@ -1,5 +1,8 @@
 # Changelog
 
+## Upcoming
+* Slowdown due to low / locked stamina is now applied to swimming too
+
 ## 1.1.3
 * Increased default stamina
   * Stamina per half-heart (5 -> 10)
