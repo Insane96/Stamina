@@ -23,6 +23,6 @@ public class VigourEffect extends ILMobEffect implements IStaminaModifier {
     @Override
     public int bonusMaxStamina(int amplifier) {
         int lvl = amplifier + 1;
-        return (lvl * StaminaFeature.staminaPerLevelOfVigourEffect);
+        return (lvl * StaminaFeature.stamina$bonusPerLevelOfVigour);
     }
 }

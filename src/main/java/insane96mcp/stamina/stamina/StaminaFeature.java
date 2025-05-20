@@ -70,13 +70,16 @@ public class StaminaFeature extends Feature {
 
     @Config(min = 0)
     @Label(name = "Stats.Stamina per half heart", description = "How much stamina the player has per half heart. Each 1 stamina is 1 tick of running")
-    public static Integer staminaPerHalfHeart = 10;
+    public static Integer stats$StaminaPerHalfHeart = 10;
     @Config(min = 0)
     @Label(name = "Stats.Bonus stamina per level of Vigour Enchantment")
-    public static Integer staminaPerLevelOfVigourEnchantment = 40;
+    public static Integer stats$bonusPerLevelOfVigourEnchantment = 40;
     @Config(min = 0)
     @Label(name = "Stats.Bonus stamina per level of Vigour Effect")
-    public static Integer staminaPerLevelOfVigourEffect = 40;
+    public static Integer stamina$bonusPerLevelOfVigour = 40;
+    @Config(min = 0)
+    @Label(name = "Stats.Stamina reduction per armor point")
+    public static Double staminaReductionPerArmorPoint = 0.025d;
 
     @Config(min = 0)
     @Label(name = "Consumption.Sprint", description = "How much stamina the player consumes each tick when sprinting")
@@ -96,13 +99,16 @@ public class StaminaFeature extends Feature {
 
     @Config(min = 0d)
     @Label(name = "Regen.Per Tick")
-    public static Double staminaRegenPerTick = 1d;
+    public static Double staminaRegenPerTick = 2d;
     @Config(min = 0)
     @Label(name = "Regen.Increased above health", description = "If player's max health is above this value, the regeneration speed is increased at the point that regenerating full stamina requires the same time as if the player would be at this max health. Set to 0 to disable")
-    public static Integer increasedRegenAboveHealth = 20;
+    public static Integer regen$increasedAboveHealth = 20;
     @Config(min = 0d)
     @Label(name = "Regen.Modifier when locked", description = "Multiplier for the regen per tick when stamina is locked")
-    public static Double staminaRegenPerTickIfLocked = 0.6d;
+    public static Double regen$modifierWhenLocked = 0.6d;
+    @Config(min = 0)
+    @Label(name = "Regen.Reduction per armor point", description = "Percentage reduction per armor point")
+    public static Double regen$ReductionPerArmorPoint = 0.025d;
 
     @Config(min = 0, max = 1d)
     @Label(name = "Lock.Below health ratio", description = "When max stamina goes below this percentage, stamina will be locked. With locked stamina, the player can't sprint")
@@ -189,7 +195,7 @@ public class StaminaFeature extends Feature {
             float staminaToRecover = staminaRegenPerTick.floatValue();
             //Slower regeneration if stamina is locked
             if (isStaminaLocked)
-                staminaToRecover *= staminaRegenPerTickIfLocked.floatValue();
+                staminaToRecover *= regen$modifierWhenLocked.floatValue();
             float percIncrease = 0f;
 
             for (MobEffectInstance instance : player.getActiveEffects()) {
@@ -197,10 +203,12 @@ public class StaminaFeature extends Feature {
                     percIncrease += staminaModifier.regenStaminaModifier(instance.getAmplifier());
             }
             //If max health is higher than 20 then increase stamina regen
-            if (increasedRegenAboveHealth > 0 && maxStamina > staminaPerHalfHeart * increasedRegenAboveHealth) {
-                percIncrease += (maxStamina - staminaPerHalfHeart * increasedRegenAboveHealth) / (staminaPerHalfHeart * increasedRegenAboveHealth);
+            if (regen$increasedAboveHealth > 0 && maxStamina > stats$StaminaPerHalfHeart * regen$increasedAboveHealth) {
+                percIncrease += (maxStamina - stats$StaminaPerHalfHeart * regen$increasedAboveHealth) / (stats$StaminaPerHalfHeart * regen$increasedAboveHealth);
             }
             staminaToRecover += (staminaToRecover * percIncrease);
+            double armor = player.getAttributeValue(Attributes.ARMOR);
+            staminaToRecover *= (float) (1f - (armor * StaminaFeature.regen$ReductionPerArmorPoint));
 
             staminaToRecover = SEventFactory.onStaminaRegenerated(player, staminaToRecover);
             if (staminaToRecover == 0)

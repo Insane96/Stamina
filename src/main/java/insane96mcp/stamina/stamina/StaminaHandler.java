@@ -2,6 +2,7 @@ package insane96mcp.stamina.stamina;
 
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 
@@ -10,18 +11,20 @@ public class StaminaHandler {
      * Returns the maximum possible stamina (when the player is fully healed)
      */
     public static float getMaxPossibleStamina(Player player) {
-        float maxPossibleStamina = Mth.ceil(player.getMaxHealth()) * StaminaFeature.staminaPerHalfHeart;
+        float maxPossibleStamina = Mth.ceil(player.getMaxHealth()) * StaminaFeature.stats$StaminaPerHalfHeart;
         if (player.getAttribute(StaminaFeature.BONUS_STAMINA_ATTRIBUTE.get()) != null)
             maxPossibleStamina += (float) player.getAttributeValue(StaminaFeature.BONUS_STAMINA_ATTRIBUTE.get());
-        if (StaminaFeature.staminaPerLevelOfVigourEnchantment > 0) {
+        if (StaminaFeature.stats$bonusPerLevelOfVigourEnchantment > 0) {
             int enchLvl = EnchantmentHelper.getEnchantmentLevel(StaminaFeature.VIGOUR.get(), player);
             if (enchLvl > 0)
-                maxPossibleStamina += StaminaFeature.staminaPerLevelOfVigourEnchantment * enchLvl;
+                maxPossibleStamina += StaminaFeature.stats$bonusPerLevelOfVigourEnchantment * enchLvl;
         }
         for (MobEffectInstance instance : player.getActiveEffects()) {
             if (instance.getEffect() instanceof IStaminaModifier staminaModifier)
                 maxPossibleStamina += staminaModifier.bonusMaxStamina(instance.getAmplifier());
         }
+        double armor = player.getAttributeValue(Attributes.ARMOR);
+        maxPossibleStamina *= (float) (1f - (armor * StaminaFeature.staminaReductionPerArmorPoint));
         return maxPossibleStamina;
     }
 
