@@ -16,9 +16,9 @@
                     "item": "minecraft:obsidian"
                 },
                 "level": {
-                    "max": 5
+                    "max": 2
                 },
-                "needed_per_level": 5,
+                "needed_per_level": 10,
                 "result": "stamina:vigour",
                 "slots": {
                     "upgrades": 1

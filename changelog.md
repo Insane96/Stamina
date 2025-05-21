@@ -1,5 +1,10 @@
 # Changelog
 
+* 12.063517
+
+## Upcoming
+* Fixed max Vigour modifier level
+
 ## 1.2.1
 * Added Tinkers' Construct integration
   * Added Vigour modifier
