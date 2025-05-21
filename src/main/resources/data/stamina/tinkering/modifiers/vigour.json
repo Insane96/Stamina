@@ -1,0 +1,19 @@
+{
+    "level_display": "tconstruct:default",
+    "modules": [
+        {
+            "type": "tconstruct:attribute",
+            "attribute": "stamina:bonus_stamina",
+            "each_level": 40,
+            "operation": "addition",
+            "slots": [
+                "feet",
+                "legs",
+                "chest",
+                "head"
+            ],
+            "unique": "stamina.modifier.vigour"
+        }
+    ],
+    "tooltip_display": "always"
+}

@@ -5,5 +5,9 @@
     "enchantment.stamina.vigour": "Vigour",
     "enchantment.stamina.vigour.info": "Increases max stamina",
 
+    "modifier.stamina.vigour": "Vigour",
+    "modifier.stamina.vigour.flavor": "Fly you fools!",
+    "modifier.stamina.vigour.description": "Increases max stamina",
+
     "attribute.name.bonus_stamina": "Bonus Stamina"
 }

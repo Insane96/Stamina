@@ -1,5 +1,9 @@
 # Changelog
 
+## Upcoming
+* Added Tinkers' Construct integration
+  * Added Vigrour modifier
+
 ## 1.2.0
 * Stamina and regen is now reduced by armor (2.5% per armor point)
 * Slowdown due to low / locked stamina is now applied to swimming too
