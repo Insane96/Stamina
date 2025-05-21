@@ -1,6 +1,6 @@
 # Changelog
 
-## Upcoming
+## 1.2.1
 * Added Tinkers' Construct integration
   * Added Vigour modifier
 * Added Italian Translation
