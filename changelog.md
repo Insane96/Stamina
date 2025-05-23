@@ -1,6 +1,6 @@
 # Changelog
 
-## Upcoming
+## 1.2.2
 * Fixed max Vigour modifier level
 * Hopefully fixed stamina overlay going over health bar
 
