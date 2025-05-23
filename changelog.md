@@ -1,9 +1,8 @@
 # Changelog
 
-* 12.063517
-
 ## Upcoming
 * Fixed max Vigour modifier level
+* Hopefully fixed stamina overlay going over health bar
 
 ## 1.2.1
 * Added Tinkers' Construct integration

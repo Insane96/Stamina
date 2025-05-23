@@ -343,7 +343,7 @@ public class StaminaFeature extends Feature {
         int healthLast = ((GuiAccessor) gui).getDisplayHealth();
 
         AttributeInstance attrMaxHealth = player.getAttribute(Attributes.MAX_HEALTH);
-        float healthMax = Math.max((float) attrMaxHealth.getValue(), Math.max(healthLast, health));
+        float healthMax = Math.max((float) attrMaxHealth.getValue(),  health);
         int healthMaxI = Mth.ceil(healthMax);
         int absorp = Mth.ceil(player.getAbsorptionAmount());
         int halfAbsorp = Mth.ceil(player.getAbsorptionAmount() / 2);
