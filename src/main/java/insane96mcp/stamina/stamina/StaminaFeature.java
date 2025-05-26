@@ -1,5 +1,6 @@
 package insane96mcp.stamina.stamina;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import insane96mcp.insanelib.base.Feature;
 import insane96mcp.insanelib.base.Label;
 import insane96mcp.insanelib.base.LoadFeature;
@@ -56,7 +57,8 @@ import java.util.UUID;
 @LoadFeature(module = Stamina.RESOURCE_PREFIX + "base", canBeDisabled = false)
 public class StaminaFeature extends Feature {
     public static final RegistryObject<MobEffect> VIGOUR_EFFECT = SRegistries.MOB_EFFECTS.register("vigour", () -> new VigourEffect(MobEffectCategory.BENEFICIAL, 0xFCD373));
-    public static final ResourceLocation GUI_ICONS = new ResourceLocation(Stamina.MOD_ID, "textures/gui/icons.png");
+    public static final ResourceLocation HEART_OVERLAY = new ResourceLocation(Stamina.MOD_ID, "textures/gui/heart_overlay.png");
+    public static final ResourceLocation LOCKED_HEART_OVERLAY = new ResourceLocation(Stamina.MOD_ID, "textures/gui/locked_heart_overlay.png");
 
     public static final UUID LOCK_SLOWDOWN_UUID = UUID.fromString("b17cbf02-97f8-4c50-9cd1-6dc732593fed");
     public static final UUID SPRINT_SLOWDOWN_UUID = UUID.fromString("d5c66a92-3f1f-44a2-95a6-1a9e66c6d8e5");
@@ -380,10 +382,10 @@ public class StaminaFeature extends Feature {
         if (player.hasEffect(MobEffects.REGENERATION))
             regen = gui.getGuiTicks() % Mth.ceil(healthMax + 5.0F);
 
+        ResourceLocation texture = HEART_OVERLAY;
         if (StaminaHandler.isStaminaLocked(player))
-            ClientUtils.setRenderColor(1f, 1f, 1f, .8f);
-        else
-            ClientUtils.setRenderColor(1f, 1f, 1f, 0.6f);
+            texture = LOCKED_HEART_OVERLAY;
+
         int oldJiggle = 0;
 
         for (int a = 0; a < halfAbsorp; a++) {
@@ -422,7 +424,10 @@ public class StaminaFeature extends Feature {
             int pY = top - (hp / 20 * rowHeight) + jiggle;
             if (shouldRenderOnOneRow)
                 pY = top + jiggle;
-            guiGraphics.blit(GUI_ICONS, right + (hp / 2 * 8) + r - (hp / 20 * 80), pY, u, v, width, height, 9, 9);
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            guiGraphics.blit(texture, right + (hp / 2 * 8) + r - (hp / 20 * 80), pY, u, v, width, height, 9, 9);
+            RenderSystem.disableBlend();
         }
         ClientUtils.resetRenderColor();
     }
