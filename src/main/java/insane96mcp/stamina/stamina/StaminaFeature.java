@@ -45,6 +45,7 @@ import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.registries.RegistryObject;
 
 import java.util.HashMap;
@@ -339,8 +340,9 @@ public class StaminaFeature extends Feature {
 
         ((GuiAccessor) gui).getRandom().setSeed(gui.getGuiTicks() * 312871L);
 
+        boolean shouldRenderOnOneRow = ModList.get().isLoaded("mantle");
+
         int health = Mth.ceil(player.getHealth());
-        int healthLast = ((GuiAccessor) gui).getDisplayHealth();
 
         AttributeInstance attrMaxHealth = player.getAttribute(Attributes.MAX_HEALTH);
         float healthMax = Math.max((float) attrMaxHealth.getValue(),  health);
@@ -351,13 +353,19 @@ public class StaminaFeature extends Feature {
         int healthRows = Mth.ceil((healthMax + absorp) / 2.0F / 10.0F);
         int rowHeight = Math.max(10 - (healthRows - 2), 3);
         int leftHeight = gui.leftHeight;
-        leftHeight -= (healthRows * rowHeight);
-        if (rowHeight != 10)
-            leftHeight -= 10 - rowHeight;
+        if (!shouldRenderOnOneRow) {
+            leftHeight -= (healthRows * rowHeight);
+            if (rowHeight != 10)
+                leftHeight -= 10 - rowHeight;
+        }
+        else
+            leftHeight -= 10;
 
         int right = mc.getWindow().getGuiScaledWidth() / 2 - 91;
         int top = mc.getWindow().getGuiScaledHeight() - leftHeight;
         float staminaPerHalfHeart = StaminaHandler.getMaxStamina(player) / health;
+        if (shouldRenderOnOneRow)
+            staminaPerHalfHeart = StaminaHandler.getMaxStamina(player) / Math.min(health, 20f);
         int halfHeartsMaxStamina = Mth.ceil(StaminaHandler.getMaxStamina(player) / staminaPerHalfHeart);
         int halfHeartsStamina = Mth.ceil(StaminaHandler.getStamina(player) / staminaPerHalfHeart);
         int height = 9;
@@ -366,9 +374,9 @@ public class StaminaFeature extends Feature {
             regen = gui.getGuiTicks() % Mth.ceil(healthMax + 5.0F);
 
         if (StaminaHandler.isStaminaLocked(player))
-            ClientUtils.setRenderColor(0.8f, 0.8f, 0.8f, .8f);
+            ClientUtils.setRenderColor(1f, 1f, 1f, .8f);
         else
-            ClientUtils.setRenderColor(1f, 1f, 1f, 0.5f);
+            ClientUtils.setRenderColor(1f, 1f, 1f, 0.6f);
         int oldJiggle = 0;
 
         for (int a = 0; a < halfAbsorp; a++) {
@@ -392,10 +400,11 @@ public class StaminaFeature extends Feature {
             int v = (int) UV_STAMINA.y;
             int width;
             int u;
-            int r = 0;
+            int r;
             if (hp % 2 == 0) {
-                width = 5;
-                u = (int) UV_STAMINA.x;
+                width = 4;
+                u = (int) UV_STAMINA.x + 1;
+                r = 1;
             }
             else {
                 width = 4;
@@ -403,7 +412,10 @@ public class StaminaFeature extends Feature {
                 r = 5;
             }
 
-            guiGraphics.blit(GUI_ICONS, right + (hp / 2 * 8) + r - (hp / 20 * 80), top - (hp / 20 * rowHeight) + jiggle, u, v, width, height, 9, 9);
+            int pY = top - (hp / 20 * rowHeight) + jiggle;
+            if (shouldRenderOnOneRow)
+                pY = top + jiggle;
+            guiGraphics.blit(GUI_ICONS, right + (hp / 2 * 8) + r - (hp / 20 * 80), pY, u, v, width, height, 9, 9);
         }
         ClientUtils.resetRenderColor();
     }
