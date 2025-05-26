@@ -81,7 +81,7 @@ public class StaminaFeature extends Feature {
     @Config(min = 0)
     @Label(name = "Stats.Stamina reduction per armor point")
     public static Double staminaReductionPerArmorPoint = 0.025d;
-    @Config(min = 0)
+    @Config
     @Label(name = "Stats.Bound to Max Health", description = "If enabled, stamina amount is bound to max health and no longer current health")
     public static Boolean staminaBoundToMaxHealth = false;
 
@@ -113,10 +113,13 @@ public class StaminaFeature extends Feature {
 
     @Config(min = 0, max = 1d)
     @Label(name = "Lock.Below health ratio", description = "When max stamina goes below this percentage, stamina will be locked. With locked stamina, the player can't sprint")
-    public static Double lockStaminaBelowHealthRatio = 0.20d;
+    public static Double lock$belowHealthRatio = 0.20d;
     @Config(min = 0, max = 1d)
     @Label(name = "Lock.Unlock at health ratio", description = "At which health percentage will stamina be unlocked")
-    public static Double unlockStaminaAtHealthRatio = 0.4d;
+    public static Double lock$unlockAtHealthRatio = 0.4d;
+    @Config(min = 0)
+    @Label(name = "Lock.Consume hunger ratio", description = "If this > 0, the player will still be able to sprint when stamina is locked, at the cost of a great amount of hunger. Stamina consumed will be applied to exhaustion at this rate. By default consumed 1 hunger/saturation per second of sprinting")
+    public static Double lock$consumeHungerRatio = 0.1d;
 
     @Config(min = 0, max = 1)
     @Label(name = "Slowdown.Sprinting.Threshold", description = "Below this percentage stamina, sprinting will be less effective.")
@@ -124,15 +127,15 @@ public class StaminaFeature extends Feature {
     @Config
     @Label(name = "Slowdown.Sprinting.Threshold Flat", description = "Below this stamina amount, sprinting will be less effective.")
     public static Double slowdownSprintingThresholdFlat = 40d;
-    @Config(min = -1, max = 0)
+    @Config(min = 0, max = 1)
     @Label(name = "Slowdown.Sprinting.Amount", description = "Slowdown sprinting and swimming by this amount, vanilla sprint is x1.3")
-    public static Double slowdownSprintingAmount = -0.15;
+    public static Double slowdownSprintingAmount = 0.15;
     @Config
     @Label(name = "Slowdown.When Locked.Enabled", description = "If stamina is locked, player will be slowed down.")
     public static Boolean slowdownLocked = true;
-    @Config(min = -1, max = 0)
+    @Config(min = 0, max = 1)
     @Label(name = "Slowdown.When Locked.Amount")
-    public static Double slowdownLockedAmount = -0.1;
+    public static Double slowdownLockedAmount = 0.1;
 
     @Config
     @Label(name = "Disable.Sprinting", description = "Disable sprinting altogether")
@@ -174,6 +177,7 @@ public class StaminaFeature extends Feature {
         //Trigger sync for newly spawned players
         if (player.tickCount == 1)
             shouldSync = true;
+        //Consume
         if (player.isSprinting() && player.getVehicle() == null && !player.isCreative() && !player.isSpectator()) {
             float staminaToConsume = staminaConsumedOnSprint.floatValue();
             if (player.getPose() == Pose.SWIMMING)
@@ -192,7 +196,8 @@ public class StaminaFeature extends Feature {
             StaminaHandler.consumeStamina(player, staminaToConsume);
             shouldSync = true;
         }
-        else if (!isMining(player) && stamina != maxStamina && maxStaminaPercentage >= lockStaminaBelowHealthRatio) {
+        //Regen
+        else if (!isMining(player) && stamina != maxStamina && maxStaminaPercentage >= lock$belowHealthRatio) {
             float staminaToRecover = staminaRegenPerTick.floatValue();
             //Slower regeneration if stamina is locked
             if (isStaminaLocked)
@@ -211,13 +216,13 @@ public class StaminaFeature extends Feature {
             if (staminaToRecover == 0)
                 return;
             stamina = StaminaHandler.regenStamina(player, staminaToRecover);
-            if (isStaminaLocked && staminaPercentage >= unlockStaminaAtHealthRatio) {
+            if (isStaminaLocked && staminaPercentage >= lock$unlockAtHealthRatio) {
                 StaminaHandler.unlockSprinting(player);
                 isStaminaLocked = false;
             }
             shouldSync = true;
         }
-        else if (!isStaminaLocked && maxStaminaPercentage < lockStaminaBelowHealthRatio) {
+        else if (!isStaminaLocked && maxStaminaPercentage < lock$belowHealthRatio) {
             StaminaHandler.setStamina(player, 0);
             StaminaHandler.lockSprinting(player);
             isStaminaLocked = true;
@@ -239,8 +244,8 @@ public class StaminaFeature extends Feature {
         if (!isLocked
                 || !slowdownLocked)
             return;
-        MCUtils.applyModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_UUID, "Stamina locked slowdown", slowdownLockedAmount, AttributeModifier.Operation.MULTIPLY_TOTAL, false);
-        MCUtils.applyModifier(player, ForgeMod.SWIM_SPEED.get(), LOCK_SLOWDOWN_UUID, "Stamina locked slowdown", slowdownLockedAmount, AttributeModifier.Operation.MULTIPLY_TOTAL, false);
+        MCUtils.applyModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_UUID, "Stamina locked slowdown", -slowdownLockedAmount, AttributeModifier.Operation.MULTIPLY_TOTAL, false);
+        MCUtils.applyModifier(player, ForgeMod.SWIM_SPEED.get(), LOCK_SLOWDOWN_UUID, "Stamina locked slowdown", -slowdownLockedAmount, AttributeModifier.Operation.MULTIPLY_TOTAL, false);
     }
 
     private static void slowdownSprinting(Player player, float staminaPercentage, float stamina) {
@@ -248,8 +253,8 @@ public class StaminaFeature extends Feature {
         if (!player.isSprinting()
                 || stamina >= slowdownSprintingThresholdFlat && staminaPercentage >= slowdownSprintingThreshold)
             return;
-        MCUtils.applyModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_UUID, "Stamina sprinting slowdown", slowdownSprintingAmount, AttributeModifier.Operation.MULTIPLY_TOTAL, false);
-        MCUtils.applyModifier(player, ForgeMod.SWIM_SPEED.get(), LOCK_SLOWDOWN_UUID, "Stamina swimming slowdown", slowdownSprintingAmount, AttributeModifier.Operation.MULTIPLY_TOTAL, false);
+        MCUtils.applyModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_UUID, "Stamina sprinting slowdown", -slowdownSprintingAmount, AttributeModifier.Operation.MULTIPLY_TOTAL, false);
+        MCUtils.applyModifier(player, ForgeMod.SWIM_SPEED.get(), LOCK_SLOWDOWN_UUID, "Stamina swimming slowdown", -slowdownSprintingAmount, AttributeModifier.Operation.MULTIPLY_TOTAL, false);
     }
 
     private static final Map<ServerPlayer, Integer> tickMined = new HashMap<>();

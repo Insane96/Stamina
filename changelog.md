@@ -1,6 +1,9 @@
 # Changelog
 
 ## Upcoming
+* New feature: Consume hunger on locked stamina
+  * If stamina is locked you can still run now, at the cost of great amounts of hunger
+  * You consume 1 hunger / saturation every 2 seconds of sprinting
 * New feature (disabled by default): Bound to Max Health
   * Max stamina is now bound to max health instead of current health
 * Changed the rendering of stamina overlay
