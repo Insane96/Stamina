@@ -1,6 +1,8 @@
 # Changelog
 
 ## Upcoming
+* New feature (disabled by default): Bound to Max Health
+  * Max stamina is now bound to max health instead of current health
 * Changed the rendering of stamina overlay
   * New texture
   * Fixes compatibility with Mantle hearts display

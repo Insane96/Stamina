@@ -81,6 +81,9 @@ public class StaminaFeature extends Feature {
     @Config(min = 0)
     @Label(name = "Stats.Stamina reduction per armor point")
     public static Double staminaReductionPerArmorPoint = 0.025d;
+    @Config(min = 0)
+    @Label(name = "Stats.Bound to Max Health", description = "If enabled, stamina amount is bound to max health and no longer current health")
+    public static Boolean staminaBoundToMaxHealth = false;
 
     @Config(min = 0)
     @Label(name = "Consumption.Sprint", description = "How much stamina the player consumes each tick when sprinting")
@@ -336,6 +339,8 @@ public class StaminaFeature extends Feature {
         boolean shouldRenderOnOneRow = ModList.get().isLoaded("mantle");
 
         int health = Mth.ceil(player.getHealth());
+        if (StaminaFeature.staminaBoundToMaxHealth)
+            health = Mth.ceil(player.getMaxHealth());
 
         AttributeInstance attrMaxHealth = player.getAttribute(Attributes.MAX_HEALTH);
         float healthMax = Math.max((float) attrMaxHealth.getValue(),  health);

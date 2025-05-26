@@ -32,6 +32,8 @@ public class StaminaHandler {
      * Returns the current max stamina
      */
     public static float getMaxStamina(Player player) {
+        if (StaminaFeature.staminaBoundToMaxHealth)
+            return getMaxPossibleStamina(player);
         float ratio = player.getHealth() / player.getMaxHealth();
         return getMaxPossibleStamina(player) * ratio;
     }
@@ -40,6 +42,8 @@ public class StaminaHandler {
      * Returns the current max stamina
      */
     public static float getMaxStamina(Player player, float maxPossibleStamina) {
+        if (StaminaFeature.staminaBoundToMaxHealth)
+            return maxPossibleStamina;
         float ratio = player.getHealth() / player.getMaxHealth();
         return maxPossibleStamina * ratio;
     }
