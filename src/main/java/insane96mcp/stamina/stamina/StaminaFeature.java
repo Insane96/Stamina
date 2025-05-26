@@ -331,6 +331,10 @@ public class StaminaFeature extends Feature {
         });
     }
 
+    public static boolean canConsumeHunger(Player player) {
+        return lock$consumeHungerRatio > 0f && player.getFoodData().getFoodLevel() > 0 && !ModList.get().isLoaded("nohunger");
+    }
+
     private static final Vec2 UV_STAMINA = new Vec2(0, 9);
 
     @OnlyIn(Dist.CLIENT)

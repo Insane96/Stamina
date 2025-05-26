@@ -70,7 +70,7 @@ public class StaminaHandler {
      * Returns true if the player can sprint
      */
     public static boolean canSprint(Player player) {
-        return !isStaminaLocked(player) || StaminaFeature.lock$consumeHungerRatio > 0f;
+        return !isStaminaLocked(player) || StaminaFeature.canConsumeHunger(player);
     }
 
     public static float setStamina(Player player, float stamina) {
@@ -83,7 +83,7 @@ public class StaminaHandler {
         float staminaSetTo = setStamina(player, getStamina(player) - amount);
         if (staminaSetTo <= 0)
             lockSprinting(player);
-        if (StaminaFeature.lock$consumeHungerRatio > 0f && isStaminaLocked(player))
+        if (StaminaFeature.canConsumeHunger(player) && isStaminaLocked(player))
             player.getFoodData().addExhaustion(StaminaFeature.lock$consumeHungerRatio.floatValue() * amount);
     }
 
