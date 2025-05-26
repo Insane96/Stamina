@@ -101,9 +101,6 @@ public class StaminaFeature extends Feature {
     @Config(min = 0d)
     @Label(name = "Regen.Per Tick")
     public static Double staminaRegenPerTick = 2d;
-    @Config(min = 0)
-    @Label(name = "Regen.Increased above health", description = "If player's max health is above this value, the regeneration speed is increased at the point that regenerating full stamina requires the same time as if the player would be at this max health. Set to 0 to disable")
-    public static Integer regen$increasedAboveHealth = 20;
     @Config(min = 0d)
     @Label(name = "Regen.Modifier when locked", description = "Multiplier for the regen per tick when stamina is locked")
     public static Double regen$modifierWhenLocked = 0.6d;
@@ -202,10 +199,6 @@ public class StaminaFeature extends Feature {
             for (MobEffectInstance instance : player.getActiveEffects()) {
                 if (instance.getEffect() instanceof IStaminaModifier staminaModifier)
                     percIncrease += staminaModifier.regenStaminaModifier(instance.getAmplifier());
-            }
-            //If max health is higher than 20 then increase stamina regen
-            if (regen$increasedAboveHealth > 0 && maxStamina > stats$StaminaPerHalfHeart * regen$increasedAboveHealth) {
-                percIncrease += (maxStamina - stats$StaminaPerHalfHeart * regen$increasedAboveHealth) / (stats$StaminaPerHalfHeart * regen$increasedAboveHealth);
             }
             staminaToRecover += (staminaToRecover * percIncrease);
             double armor = player.getAttributeValue(Attributes.ARMOR);

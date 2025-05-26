@@ -4,6 +4,7 @@
 * Changed the rendering of stamina overlay
   * New texture
   * Fixes compatibility with Mantle hearts display
+* Removed Regen.Increased above health
 
 ## 1.2.2
 * Fixed max Vigour modifier level
