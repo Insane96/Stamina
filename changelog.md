@@ -1,6 +1,6 @@
 # Changelog
 
-## Upcoming
+## Beta 1.3.0
 * New feature: Consume hunger on locked stamina
   * If stamina is locked you can still run now, at the cost of great amounts of hunger
   * You consume 1 hunger / saturation every 2 seconds of sprinting
