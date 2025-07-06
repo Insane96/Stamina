@@ -1,6 +1,6 @@
 # Changelog
 
-## Upcoming
+## 1.4.0
 Requires InsaneLib 1.21.12 and forge 47.4.0  
 **Config options might have been reset**
 * Stamina consumption is now reduced by 20% when out of combat
