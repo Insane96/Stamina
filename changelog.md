@@ -1,5 +1,10 @@
 # Changelog
 
+## Upcoming
+Requires InsaneLib 1.21.12 and forge 47.4.0  
+**Config options might have been reset**
+* Fixed empty stamina on respawn
+
 ## Beta 1.3.1
 * Stamina overlay changed again
   * Reverted to original texture, more or less

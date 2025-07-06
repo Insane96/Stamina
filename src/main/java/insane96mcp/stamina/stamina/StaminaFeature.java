@@ -3,7 +3,6 @@ package insane96mcp.stamina.stamina;
 import com.mojang.blaze3d.systems.RenderSystem;
 import insane96mcp.insanelib.base.Feature;
 import insane96mcp.insanelib.base.LoadFeature;
-import insane96mcp.insanelib.base.Module;
 import insane96mcp.insanelib.base.config.Config;
 import insane96mcp.insanelib.event.PlayerSprintEvent;
 import insane96mcp.insanelib.util.ClientUtils;
@@ -55,8 +54,8 @@ import java.util.UUID;
 @LoadFeature(module = Stamina.RESOURCE_PREFIX + "base", canBeDisabled = false, description = "Stamina to let the player run and do stuff.")
 public class StaminaFeature extends Feature {
     public static final RegistryObject<MobEffect> VIGOUR_EFFECT = SRegistries.MOB_EFFECTS.register("vigour", () -> new VigourEffect(MobEffectCategory.BENEFICIAL, 0xFCD373));
-    public static final ResourceLocation HEART_OVERLAY = new ResourceLocation(Stamina.MOD_ID, "textures/gui/heart_overlay.png");
-    public static final ResourceLocation LOCKED_HEART_OVERLAY = new ResourceLocation(Stamina.MOD_ID, "textures/gui/locked_heart_overlay.png");
+    public static final ResourceLocation HEART_OVERLAY = Stamina.location("textures/gui/heart_overlay.png");
+    public static final ResourceLocation LOCKED_HEART_OVERLAY = Stamina.location("textures/gui/locked_heart_overlay.png");
 
     public static final UUID LOCK_SLOWDOWN_UUID = UUID.fromString("b17cbf02-97f8-4c50-9cd1-6dc732593fed");
     public static final UUID SPRINT_SLOWDOWN_UUID = UUID.fromString("d5c66a92-3f1f-44a2-95a6-1a9e66c6d8e5");
@@ -293,6 +292,11 @@ public class StaminaFeature extends Feature {
         if (!(event.getEntity() instanceof ServerPlayer player))
             return;
         StaminaSync.sync(player);
+    }
+
+    @SubscribeEvent
+    public void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        StaminaHandler.setStamina(event.getEntity(), Float.MAX_VALUE);
     }
 
     @OnlyIn(Dist.CLIENT)

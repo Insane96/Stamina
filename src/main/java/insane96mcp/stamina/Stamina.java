@@ -6,8 +6,8 @@ import insane96mcp.stamina.network.NetworkHandler;
 import insane96mcp.stamina.setup.SCommonConfig;
 import insane96mcp.stamina.setup.SRegistries;
 import insane96mcp.stamina.stamina.StaminaFeature;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -23,11 +23,11 @@ public class Stamina
 
     public static Module base;
 
-    public Stamina()
+    public Stamina(FMLJavaModLoadingContext context)
     {
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SCommonConfig.CONFIG_SPEC, MOD_ID + ".toml");
+        context.registerConfig(ModConfig.Type.COMMON, SCommonConfig.CONFIG_SPEC, MOD_ID + ".toml");
 
-        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        IEventBus modEventBus = context.getModEventBus();
         modEventBus.addListener(this::commonSetup);
         modEventBus.register(StaminaFeature.class);
 
@@ -40,5 +40,13 @@ public class Stamina
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         NetworkHandler.init();
+    }
+
+    public static ResourceLocation location(String path) {
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+    }
+
+    public static String lang(String path) {
+        return MOD_ID + "." + path;
     }
 }
