@@ -11,20 +11,20 @@ public class StaminaHandler {
      * Returns the maximum possible stamina (when the player is fully healed)
      */
     public static float getMaxPossibleStamina(Player player) {
-        float maxPossibleStamina = Mth.ceil(player.getMaxHealth()) * StaminaFeature.stats$StaminaPerHalfHeart;
+        float maxPossibleStamina = Mth.ceil(player.getMaxHealth()) * StaminaFeature.stamina$perHalfHeart;
         if (player.getAttribute(StaminaFeature.BONUS_STAMINA_ATTRIBUTE.get()) != null)
             maxPossibleStamina += (float) player.getAttributeValue(StaminaFeature.BONUS_STAMINA_ATTRIBUTE.get());
-        if (StaminaFeature.stats$bonusPerLevelOfVigourEnchantment > 0) {
+        if (StaminaFeature.stamina$bonusPerLevelOfVigourEnchantment > 0) {
             int enchLvl = EnchantmentHelper.getEnchantmentLevel(StaminaFeature.VIGOUR.get(), player);
             if (enchLvl > 0)
-                maxPossibleStamina += StaminaFeature.stats$bonusPerLevelOfVigourEnchantment * enchLvl;
+                maxPossibleStamina += StaminaFeature.stamina$bonusPerLevelOfVigourEnchantment * enchLvl;
         }
         for (MobEffectInstance instance : player.getActiveEffects()) {
             if (instance.getEffect() instanceof IStaminaModifier staminaModifier)
                 maxPossibleStamina += staminaModifier.bonusMaxStamina(instance.getAmplifier());
         }
         double armor = player.getAttributeValue(Attributes.ARMOR);
-        maxPossibleStamina *= (float) (1f - (armor * StaminaFeature.staminaReductionPerArmorPoint));
+        maxPossibleStamina *= (float) (1f - (armor * StaminaFeature.stamina$percentageReductionPerArmorPoint));
         return maxPossibleStamina;
     }
 
@@ -32,7 +32,7 @@ public class StaminaHandler {
      * Returns the current max stamina
      */
     public static float getMaxStamina(Player player) {
-        if (StaminaFeature.staminaBoundToMaxHealth)
+        if (StaminaFeature.stamina$boundToMaxHealth)
             return getMaxPossibleStamina(player);
         float ratio = player.getHealth() / player.getMaxHealth();
         return getMaxPossibleStamina(player) * ratio;
@@ -42,7 +42,7 @@ public class StaminaHandler {
      * Returns the current max stamina
      */
     public static float getMaxStamina(Player player, float maxPossibleStamina) {
-        if (StaminaFeature.staminaBoundToMaxHealth)
+        if (StaminaFeature.stamina$boundToMaxHealth)
             return maxPossibleStamina;
         float ratio = player.getHealth() / player.getMaxHealth();
         return maxPossibleStamina * ratio;

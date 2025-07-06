@@ -92,7 +92,7 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
-    implementation fg.deobf("blank:InsaneLib:${insanelib_version}-mc${minecraft_version}")
+    implementation fg.deobf("blank:insanelib:${insanelib_version}")
 
     implementation fg.deobf("slimeknights.mantle:Mantle:${minecraft_version}-${mantle_build}")
     implementation fg.deobf("slimeknights.tconstruct:TConstruct:${minecraft_version}-${ticon_build}")
