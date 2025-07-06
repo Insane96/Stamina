@@ -1,5 +1,6 @@
 package insane96mcp.stamina.stamina;
 
+import insane96mcp.insanelib.util.ModNBTData;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -48,22 +49,18 @@ public class StaminaHandler {
         return maxPossibleStamina * ratio;
     }
 
-    /*public static float getStaminaPerHalfHeart(Player player) {
-        return getMaxStamina(player) / player.getHealth();
-    }*/
-
     /**
      * Returns the current stamina
      */
     public static float getStamina(Player player) {
-        return player.getPersistentData().getFloat(StaminaFeature.STAMINA);
+        return ModNBTData.get(player, StaminaFeature.STAMINA, Float.class);
     }
 
     /**
      * Returns true if the player is locked from sprinting
      */
     public static boolean isStaminaLocked(Player player) {
-        return player.getPersistentData().getBoolean(StaminaFeature.STAMINA_LOCKED);
+        return ModNBTData.get(player, StaminaFeature.STAMINA_LOCKED, Boolean.class);
     }
 
     /**
@@ -75,7 +72,7 @@ public class StaminaHandler {
 
     public static float setStamina(Player player, float stamina) {
         stamina = Mth.clamp(stamina, 0, getMaxStamina(player));
-        player.getPersistentData().putFloat(StaminaFeature.STAMINA, stamina);
+        ModNBTData.put(player, StaminaFeature.STAMINA, stamina);
         return stamina;
     }
 
@@ -92,10 +89,10 @@ public class StaminaHandler {
     }
 
     public static void lockSprinting(Player player) {
-        player.getPersistentData().putBoolean(StaminaFeature.STAMINA_LOCKED, true);
+        ModNBTData.put(player, StaminaFeature.STAMINA_LOCKED, true);
     }
 
     public static void unlockSprinting(Player player) {
-        player.getPersistentData().putBoolean(StaminaFeature.STAMINA_LOCKED, false);
+        ModNBTData.put(player, StaminaFeature.STAMINA_LOCKED, false);
     }
 }

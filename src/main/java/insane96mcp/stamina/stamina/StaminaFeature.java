@@ -60,8 +60,8 @@ public class StaminaFeature extends Feature {
     public static final UUID LOCK_SLOWDOWN_UUID = UUID.fromString("b17cbf02-97f8-4c50-9cd1-6dc732593fed");
     public static final UUID SPRINT_SLOWDOWN_UUID = UUID.fromString("d5c66a92-3f1f-44a2-95a6-1a9e66c6d8e5");
 
-    public static final String STAMINA = Stamina.RESOURCE_PREFIX + "stamina";
-    public static final String STAMINA_LOCKED = Stamina.RESOURCE_PREFIX + "stamina_locked";
+    public static final ResourceLocation STAMINA = Stamina.location("stamina");
+    public static final ResourceLocation STAMINA_LOCKED = Stamina.location("stamina_locked");
     public static String OVERLAY = "stamina_overlay";
 
     public static final RegistryObject<Enchantment> VIGOUR = SRegistries.ENCHANTMENTS.register("vigour", VigourEnchantment::new);

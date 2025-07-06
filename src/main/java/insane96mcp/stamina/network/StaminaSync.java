@@ -1,9 +1,11 @@
 package insane96mcp.stamina.network;
 
+import insane96mcp.insanelib.util.ModNBTData;
 import insane96mcp.stamina.stamina.StaminaFeature;
 import insane96mcp.stamina.stamina.StaminaHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -30,8 +32,9 @@ public class StaminaSync {
 
     public static void handle(final StaminaSync message, Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
-            NetworkHelper.getSidedPlayer(ctx.get()).getPersistentData().putFloat(StaminaFeature.STAMINA, message.stamina);
-            NetworkHelper.getSidedPlayer(ctx.get()).getPersistentData().putBoolean(StaminaFeature.STAMINA_LOCKED, message.staminaLocked);
+            Player player = NetworkHelper.getSidedPlayer(ctx.get());
+            ModNBTData.put(player, StaminaFeature.STAMINA, message.stamina);
+            ModNBTData.put(player, StaminaFeature.STAMINA_LOCKED, message.staminaLocked);
         });
         ctx.get().setPacketHandled(true);
     }
