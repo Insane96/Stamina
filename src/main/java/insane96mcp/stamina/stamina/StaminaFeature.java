@@ -7,6 +7,7 @@ import insane96mcp.insanelib.base.config.Config;
 import insane96mcp.insanelib.event.PlayerSprintEvent;
 import insane96mcp.insanelib.util.ClientUtils;
 import insane96mcp.insanelib.util.MCUtils;
+import insane96mcp.insanelib.util.ModNBTData;
 import insane96mcp.stamina.Stamina;
 import insane96mcp.stamina.effect.VigourEffect;
 import insane96mcp.stamina.enchantment.VigourEnchantment;
@@ -40,6 +41,7 @@ import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
+import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -62,6 +64,8 @@ public class StaminaFeature extends Feature {
 
     public static final ResourceLocation STAMINA = Stamina.location("stamina");
     public static final ResourceLocation STAMINA_LOCKED = Stamina.location("stamina_locked");
+    public static final ResourceLocation LAST_HIT = Stamina.location("last_hit");
+    public static final ResourceLocation LAST_HURT = Stamina.location("last_hurt");
     public static String OVERLAY = "stamina_overlay";
 
     public static final RegistryObject<Enchantment> VIGOUR = SRegistries.ENCHANTMENTS.register("vigour", VigourEnchantment::new);
@@ -89,6 +93,8 @@ public class StaminaFeature extends Feature {
     public static Double consumption$conduitSwimmingModifier = 0.85d;
     @Config(min = 0, description = "How much stamina the player consumes each tick when mining. If stamina is locked, mining speed is halved")
     public static Double consumption$mine = 0d;
+    @Config(min = 0d, description = "Stamina consumption will be multiplied by this value when the player is out of combat. Out of combat = not attacked or hurt in the last 15 seconds")
+    public static Double consumption$outOfCombatMultiplier = 0.8d;
 
     @Config(min = 0d)
     public static Double regen$perTick = 2d;
@@ -163,6 +169,8 @@ public class StaminaFeature extends Feature {
             if (player.getPose() == Pose.SWIMMING && player.hasEffect(MobEffects.CONDUIT_POWER))
                 staminaToConsume *= consumption$conduitSwimmingModifier.floatValue();
             staminaToConsume = SEventFactory.onStaminaConsumed(player, staminaToConsume);
+            if (!isInCombat(player))
+                staminaToConsume *= consumption$outOfCombatMultiplier.floatValue();
             if (staminaToConsume == 0)
                 return;
             StaminaHandler.consumeStamina(player, staminaToConsume);
@@ -248,6 +256,22 @@ public class StaminaFeature extends Feature {
 
     public static boolean isMining(ServerPlayer player) {
         return Feature.isEnabled(StaminaFeature.class) && tickMined.containsKey(player) && player.tickCount < tickMined.get(player) + 8;
+    }
+
+    public static boolean isInCombat(ServerPlayer player) {
+        return player.level().getGameTime() - ModNBTData.get(player, LAST_HIT, Integer.class) < 300
+                || player.level().getGameTime() - ModNBTData.get(player, LAST_HURT, Integer.class) < 300;
+    }
+
+    @SubscribeEvent
+    public void onAttack(LivingDamageEvent event) {
+        if (consumption$outOfCombatMultiplier == 1f)
+            return;
+
+        if (event.getEntity() instanceof ServerPlayer serverPlayer)
+            ModNBTData.put(serverPlayer, LAST_HURT, serverPlayer.level().getGameTime());
+        else if (event.getSource().getEntity() instanceof ServerPlayer serverPlayer)
+            ModNBTData.put(serverPlayer, LAST_HIT, serverPlayer.level().getGameTime());
     }
 
     @SubscribeEvent
