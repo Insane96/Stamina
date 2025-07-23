@@ -89,6 +89,8 @@ public class StaminaFeature extends Feature {
     public static Integer consumption$jump = 10;
     @Config(min = 0, description = "How much stamina the player consumes each tick when swimming")
     public static Double consumption$swim = 0.5d;
+    /*@Config(min = 0, description = "How much stamina the player consumes each tick when rowing boats")
+    public static Double consumption$row = 0.5d;*/
     @Config(min = 0, description = "Multiplier for stamina consumed when the player is swimming with the conduit power effect.")
     public static Double consumption$conduitSwimmingModifier = 0.85d;
     @Config(min = 0, description = "How much stamina the player consumes each tick when mining. If stamina is locked, mining speed is halved")
@@ -100,6 +102,10 @@ public class StaminaFeature extends Feature {
     public static Double regen$perTick = 2d;
     @Config(min = 0d, description = "Multiplier for the regen per tick when stamina is locked")
     public static Double regen$modifierWhenLocked = 0.6d;
+    @Config(min = 0, description = "Multiplier for the regen per tick when player's in water")
+    public static Double regen$modifierWhenInWater = 1d;
+    @Config(min = 0, description = "'Modified when in water' is applied only when the player is not on the ground")
+    public static Boolean regen$modifierWhenInWaterWhenOffGround = true;
     @Config(min = 0, description = "Percentage reduction per armor point")
     public static Double regen$reductionPerArmorPoint = 0.025d;
 
@@ -131,7 +137,6 @@ public class StaminaFeature extends Feature {
         for (EntityType<? extends LivingEntity> entityType : event.getTypes()) {
             if (event.has(entityType, BONUS_STAMINA_ATTRIBUTE.get()))
                 continue;
-
             event.add(entityType, BONUS_STAMINA_ATTRIBUTE.get());
         }
     }
@@ -176,12 +181,17 @@ public class StaminaFeature extends Feature {
             StaminaHandler.consumeStamina(player, staminaToConsume);
             shouldSync = true;
         }
+        /*else if (player.getVehicle() != null && !player.isCreative() && !player.isSpectator()) {
+
+        }*/
         //Regen
         else if (!isMining(player) && stamina != maxStamina && maxStaminaPercentage >= lock$belowHealthRatio) {
             float staminaToRecover = regen$perTick.floatValue();
             //Slower regeneration if stamina is locked
             if (isStaminaLocked)
                 staminaToRecover *= regen$modifierWhenLocked.floatValue();
+            if (player.isInWater() && (!player.onGround() || !regen$modifierWhenInWaterWhenOffGround) && regen$modifierWhenInWater != 1f)
+                staminaToRecover *= regen$modifierWhenInWater.floatValue();
             float percIncrease = 0f;
 
             for (MobEffectInstance instance : player.getActiveEffects()) {

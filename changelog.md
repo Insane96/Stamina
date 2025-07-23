@@ -1,5 +1,8 @@
 # Changelog
 
+## Upcoming
+* Added config option to change regeneration when in water
+
 ## 1.4.0
 Requires InsaneLib 1.21.12 and forge 47.4.0  
 **Config options might have been reset**
