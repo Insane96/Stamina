@@ -2,6 +2,7 @@
 
 ## Upcoming
 * Added config option to change regeneration when in water
+* Fixed Vigour enchantment description
 
 ## 1.4.0
 Requires InsaneLib 1.21.12 and forge 47.4.0  
