@@ -1,6 +1,6 @@
 # Changelog
 
-## Upcoming
+## 1.4.2
 * Fixed overlay rendering over absorption
 
 ## 1.4.1
