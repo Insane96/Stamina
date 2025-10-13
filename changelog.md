@@ -1,5 +1,8 @@
 # Changelog
 
+## Upcoming
+* Fixed overlay rendering over absorption
+
 ## 1.4.1
 * Added config option to change regeneration when in water
 * Fixed Vigour enchantment description

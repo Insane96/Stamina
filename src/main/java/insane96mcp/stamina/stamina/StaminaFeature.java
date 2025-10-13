@@ -378,6 +378,12 @@ public class StaminaFeature extends Feature {
         }
         else
             leftHeight -= 10;
+        if (absorp > 0) {
+            if (shouldRenderOnOneRow)
+                leftHeight -= 10;
+            else
+                leftHeight -= Mth.ceil(absorp / 20f);
+        }
 
         int right = mc.getWindow().getGuiScaledWidth() / 2 - 91;
         int top = mc.getWindow().getGuiScaledHeight() - leftHeight;
