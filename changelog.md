@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.3
+* Halved hunger consumed when sprinting with stamina locked
+* Added config option to lock stamina if player's max health is below a certain value (4 by default)
+
 ## 1.4.2
 * Fixed overlay rendering over absorption
 

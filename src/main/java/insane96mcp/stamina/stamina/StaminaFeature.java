@@ -109,12 +109,14 @@ public class StaminaFeature extends Feature {
     @Config(min = 0, description = "Percentage reduction per armor point")
     public static Double regen$reductionPerArmorPoint = 0.025d;
 
+    @Config(min = 0, description = "When max health is equal or less than this, stamina will be locked. With locked stamina, the player can't sprint")
+    public static Double lock$belowMaxHealth = 4d;
     @Config(min = 0, max = 1d, description = "When max stamina goes below this percentage, stamina will be locked. With locked stamina, the player can't sprint")
     public static Double lock$belowHealthRatio = 0.20d;
     @Config(min = 0, max = 1d, description = "At which health percentage will stamina be unlocked")
     public static Double lock$unlockAtHealthRatio = 0.4d;
     @Config(min = 0, description = "If this > 0, the player will still be able to sprint when stamina is locked, at the cost of a great amount of hunger. Stamina consumed will be applied to exhaustion at this rate. By default consumed 1 hunger/saturation per second of sprinting")
-    public static Double lock$consumeHungerRatio = 0.1d;
+    public static Double lock$consumeHungerRatio = 0.05d;
 
     @Config(min = 0, max = 1, description = "Below this percentage stamina, sprinting will be less effective.")
     public static Double slowdown$sprinting$threshold = 0.20d;
@@ -150,6 +152,7 @@ public class StaminaFeature extends Feature {
 
         boolean shouldSync = false;
 
+        float maxHealth = player.getMaxHealth();
         float maxPossibleStamina = StaminaHandler.getMaxPossibleStamina(player);
         float maxStamina = StaminaHandler.getMaxStamina(player, maxPossibleStamina);
         float stamina = StaminaHandler.getStamina(player);
@@ -185,7 +188,7 @@ public class StaminaFeature extends Feature {
 
         }*/
         //Regen
-        else if (!isMining(player) && stamina != maxStamina && maxStaminaPercentage >= lock$belowHealthRatio) {
+        else if (!isMining(player) && stamina != maxStamina && maxStaminaPercentage > lock$belowHealthRatio && maxHealth > lock$belowMaxHealth) {
             float staminaToRecover = regen$perTick.floatValue();
             //Slower regeneration if stamina is locked
             if (isStaminaLocked)
@@ -212,7 +215,7 @@ public class StaminaFeature extends Feature {
             }
             shouldSync = true;
         }
-        else if (!isStaminaLocked && maxStaminaPercentage < lock$belowHealthRatio) {
+        else if (!isStaminaLocked && (maxStaminaPercentage <= lock$belowHealthRatio || maxHealth <= lock$belowMaxHealth)) {
             StaminaHandler.setStamina(player, 0);
             StaminaHandler.lockSprinting(player);
             isStaminaLocked = true;
