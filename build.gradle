@@ -93,6 +93,7 @@ dependencies {
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     implementation fg.deobf("blank:insanelib:${insanelib_version}")
+    implementation fg.deobf("blank:mobspropertiesrandomness:${mpr_version}")
 
     implementation fg.deobf("slimeknights.mantle:Mantle:${minecraft_version}-${mantle_build}")
     implementation fg.deobf("slimeknights.tconstruct:TConstruct:${minecraft_version}-${ticon_build}")
@@ -101,6 +102,7 @@ dependencies {
     compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}"))
     // at runtime, use the full JEI jar for Forge
     runtimeOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}"))
+
 
 }
 

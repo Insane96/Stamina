@@ -3,6 +3,8 @@ package insane96mcp.stamina;
 import com.mojang.logging.LogUtils;
 import insane96mcp.insanelib.base.Module;
 import insane96mcp.stamina.command.SCommand;
+import insane96mcp.stamina.data.mpr.SConditionsRegistry;
+import insane96mcp.stamina.data.mpr.SPropertiesRegistry;
 import insane96mcp.stamina.network.NetworkHandler;
 import insane96mcp.stamina.setup.SCommonConfig;
 import insane96mcp.stamina.setup.SRegistries;
@@ -12,6 +14,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -37,6 +40,11 @@ public class Stamina
         modEventBus.register(StaminaFeature.class);
 
         SRegistries.REGISTRIES.forEach(register -> register.register(modEventBus));
+
+        if (ModList.get().isLoaded("mobspropertiesrandomness")) {
+            SConditionsRegistry.init();
+            SPropertiesRegistry.init();
+        }
     }
 
     public static void initModule() {
