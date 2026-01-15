@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.0.0
+* Added `/insanestamina` command
+  * Lets you get, set, regen and consume the stamina of players
+* Added `stamina:stamina` condition and `stamina:set` and `stamina:add` properties for Mobs Properties Randomness
+
 ## 1.4.3
 * Halved hunger consumed when sprinting with stamina locked
 * Added config option to lock stamina if player's max health is below a certain value (4 by default)
