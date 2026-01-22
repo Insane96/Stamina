@@ -95,7 +95,7 @@ public class StaminaFeature extends Feature {
     public static Double consumption$conduitSwimmingModifier = 0.85d;
     @Config(min = 0, description = "How much stamina the player consumes each tick when mining. If stamina is locked, mining speed is halved")
     public static Double consumption$mine = 0d;
-    @Config(min = 0d, description = "Stamina consumption will be multiplied by this value when the player is out of combat. Out of combat = not attacked or hurt in the last 15 seconds")
+    @Config(min = 0d, description = "Multiply stamina consumption by this value when the player is out of combat. Out of combat = not attacked or hurt in the last 15 seconds")
     public static Double consumption$outOfCombatMultiplier = 0.8d;
 
     @Config(min = 0d)
@@ -384,8 +384,6 @@ public class StaminaFeature extends Feature {
         if (absorp > 0) {
             if (shouldRenderOnOneRow)
                 leftHeight -= 10;
-            else
-                leftHeight -= Mth.ceil(absorp / 20f);
         }
 
         int right = mc.getWindow().getGuiScaledWidth() / 2 - 91;

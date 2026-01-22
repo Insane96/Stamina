@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.0.1
+* Fixed overlay rendering 1 pixel too low with absorption and without Mantle installed
+
 ## 1.5.0.0
 * Added `/insanestamina` command
   * Lets you get, set, regen and consume the stamina of players
