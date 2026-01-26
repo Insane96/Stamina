@@ -49,9 +49,9 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.registries.RegistryObject;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.WeakHashMap;
 
 @LoadFeature(module = Stamina.RESOURCE_PREFIX + "base", canBeDisabled = false, description = "Stamina to let the player run and do stuff.")
 public class StaminaFeature extends Feature {
@@ -250,7 +250,7 @@ public class StaminaFeature extends Feature {
         MCUtils.applyModifier(player, ForgeMod.SWIM_SPEED.get(), LOCK_SLOWDOWN_UUID, "Stamina swimming slowdown", -slowdown$sprinting$amount, AttributeModifier.Operation.MULTIPLY_TOTAL, false);
     }
 
-    private static final Map<ServerPlayer, Integer> tickMined = new HashMap<>();
+    private static final Map<ServerPlayer, Integer> tickMined = new WeakHashMap<>();
 
     @SubscribeEvent
     public void onBreakSpeed(PlayerEvent.BreakSpeed event) {

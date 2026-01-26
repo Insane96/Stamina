@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.0.2
+* Fixed a possible memory leak
+
 ## 1.5.0.1
 * Fixed overlay rendering 1 pixel too low with absorption and without Mantle installed
 
