@@ -1,7 +1,7 @@
 package insane96mcp.stamina.enchantment;
 
 import insane96mcp.insanelib.base.Feature;
-import insane96mcp.stamina.stamina.StaminaFeature;
+import insane96mcp.stamina.feature.StaminaFeature;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;

@@ -1,8 +1,8 @@
 package insane96mcp.stamina.effect;
 
 import insane96mcp.insanelib.world.effect.ILMobEffect;
-import insane96mcp.stamina.stamina.IStaminaModifier;
-import insane96mcp.stamina.stamina.StaminaFeature;
+import insane96mcp.stamina.feature.IStaminaModifier;
+import insane96mcp.stamina.feature.StaminaFeature;
 import net.minecraft.world.effect.MobEffectCategory;
 
 public class VigourEffect extends ILMobEffect implements IStaminaModifier {

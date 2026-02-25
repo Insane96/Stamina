@@ -2,8 +2,8 @@ package insane96mcp.stamina.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.FloatArgumentType;
+import insane96mcp.stamina.feature.StaminaHandler;
 import insane96mcp.stamina.network.StaminaSync;
-import insane96mcp.stamina.stamina.StaminaHandler;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;

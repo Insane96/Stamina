@@ -1,4 +1,4 @@
-package insane96mcp.stamina.stamina;
+package insane96mcp.stamina.feature;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import insane96mcp.insanelib.base.Feature;

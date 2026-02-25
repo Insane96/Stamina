@@ -1,8 +1,8 @@
 package insane96mcp.stamina.network;
 
 import insane96mcp.insanelib.util.ModNBTData;
-import insane96mcp.stamina.stamina.StaminaFeature;
-import insane96mcp.stamina.stamina.StaminaHandler;
+import insane96mcp.stamina.feature.StaminaFeature;
+import insane96mcp.stamina.feature.StaminaHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;

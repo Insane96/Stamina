@@ -1,4 +1,4 @@
-package insane96mcp.stamina.stamina;
+package insane96mcp.stamina.feature;
 
 public interface IStaminaModifier {
     float consumedStaminaModifier(int amplifier);

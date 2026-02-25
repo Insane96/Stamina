@@ -1,4 +1,4 @@
-package insane96mcp.stamina.stamina;
+package insane96mcp.stamina.feature;
 
 import insane96mcp.insanelib.util.ModNBTData;
 import net.minecraft.util.Mth;
