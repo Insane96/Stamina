@@ -116,7 +116,7 @@ public class StaminaFeature extends Feature {
     @Config(min = 0, max = 1d, description = "At which health percentage will stamina be unlocked")
     public static Double lock$unlockAtHealthRatio = 0.4d;
     @Config(min = 0, description = "If this > 0, the player will still be able to sprint when stamina is locked, at the cost of a great amount of hunger. Stamina consumed will be applied to exhaustion at this rate. By default consumed 1 hunger/saturation per second of sprinting")
-    public static Double lock$consumeHungerRatio = 0.05d;
+    public static Double lock$consumeHungerRatio = 0d;
 
     @Config(min = 0, max = 1, description = "Below this percentage stamina, sprinting will be less effective.")
     public static Double slowdown$sprinting$threshold = 0.20d;

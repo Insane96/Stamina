@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.0.3
+* Disable consume hunger when stamina is locked
+  * Can be re-enabled in the config
+
 ## 1.5.0.2
 * Fixed a possible memory leak
 
