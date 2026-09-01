@@ -1,46 +1,48 @@
 package insane96mcp.stamina.network;
 
-import insane96mcp.insanelib.util.ModNBTData;
+import insane96mcp.insanelib.core.ModNBTData;
+import insane96mcp.stamina.Stamina;
 import insane96mcp.stamina.feature.StaminaFeature;
 import insane96mcp.stamina.feature.StaminaHandler;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.neoforged.neoforge.network.registration.NetworkRegistry;
 
-import java.util.function.Supplier;
+public record StaminaSync(float stamina, boolean staminaLocked) implements CustomPacketPayload {
 
-public class StaminaSync {
+    public static final CustomPacketPayload.Type<StaminaSync> TYPE =
+            new CustomPacketPayload.Type<>(Stamina.location("stamina_sync"));
 
-    float stamina;
-    boolean staminaLocked;
+    public static final StreamCodec<io.netty.buffer.ByteBuf, StaminaSync> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.FLOAT, StaminaSync::stamina,
+            ByteBufCodecs.BOOL, StaminaSync::staminaLocked,
+            StaminaSync::new
+    );
 
-    public StaminaSync(float stamina, boolean staminaLocked) {
-        this.stamina = stamina;
-        this.staminaLocked = staminaLocked;
+    @Override
+    public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static void encode(StaminaSync pkt, FriendlyByteBuf buf) {
-        buf.writeFloat(pkt.stamina);
-        buf.writeBoolean(pkt.staminaLocked);
-    }
-
-    public static StaminaSync decode(FriendlyByteBuf buf) {
-        return new StaminaSync(buf.readFloat(), buf.readBoolean());
-    }
-
-    public static void handle(final StaminaSync message, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> {
-            Player player = NetworkHelper.getSidedPlayer(ctx.get());
-            ModNBTData.put(player, StaminaFeature.STAMINA, message.stamina);
-            ModNBTData.put(player, StaminaFeature.STAMINA_LOCKED, message.staminaLocked);
+    public static void handle(final StaminaSync payload, final IPayloadContext context) {
+        context.enqueueWork(() -> {
+            Player player = Minecraft.getInstance().player;
+            if (player == null)
+                return;
+            ModNBTData.put(player, StaminaFeature.STAMINA, payload.stamina());
+            ModNBTData.put(player, StaminaFeature.STAMINA_LOCKED, payload.staminaLocked());
         });
-        ctx.get().setPacketHandled(true);
     }
 
     public static void sync(ServerPlayer player) {
-        Object msg = new StaminaSync(StaminaHandler.getStamina(player), StaminaHandler.isStaminaLocked(player));
-        NetworkHandler.CHANNEL.sendTo(msg, player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+        if (!NetworkRegistry.hasChannel(player.connection, TYPE.id()))
+            return;
+        PacketDistributor.sendToPlayer(player, new StaminaSync(StaminaHandler.getStamina(player), StaminaHandler.isStaminaLocked(player)));
     }
 }

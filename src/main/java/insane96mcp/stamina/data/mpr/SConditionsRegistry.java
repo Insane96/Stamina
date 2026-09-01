@@ -1,17 +1,13 @@
 package insane96mcp.stamina.data.mpr;
 
-import insane96mcp.mobspropertiesrandomness.data.json.condition.MPRCondition;
+import insane96mcp.mobspropertiesrandomness.data.json.condition.ConditionsRegistry;
 import insane96mcp.stamina.Stamina;
-
-import static insane96mcp.mobspropertiesrandomness.data.json.condition.ConditionsRegistry.CONDITIONS;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.RegisterEvent;
 
 public class SConditionsRegistry {
-    /// Use your own namespace
-    private static void register(String id, Class<? extends MPRCondition> clazz) {
-        CONDITIONS.put(Stamina.location(id), clazz);
-    }
-
-    public static void init() {
-        register("stamina", SStaminaCondition.class);
+    public static void init(IEventBus modEventBus) {
+        modEventBus.addListener((RegisterEvent event) -> event.register(ConditionsRegistry.REGISTRY_KEY, helper ->
+                helper.register(Stamina.location("stamina"), SStaminaCondition.class)));
     }
 }

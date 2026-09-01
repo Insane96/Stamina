@@ -5,10 +5,6 @@
     "enchantment.stamina.vigour": "Vigore",
     "enchantment.stamina.vigour.desc": "Aumenta la stamina massima",
 
-    "modifier.stamina.vigour": "Vigore",
-    "modifier.stamina.vigour.flavor": "Tocca anda' lontano",
-    "modifier.stamina.vigour.description": "Aumenta la stamina massima",
-
     "attribute.name.bonus_stamina": "Stamina Bonus",
 
     "commands.insanestamina.get": "Stamina di %s: %.1f"

@@ -1,10 +1,13 @@
 package insane96mcp.stamina.feature;
 
-import insane96mcp.insanelib.util.ModNBTData;
+import insane96mcp.insanelib.core.ModNBTData;
+import insane96mcp.stamina.setup.SEnchantments;
+import net.minecraft.core.Holder;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 
 public class StaminaHandler {
@@ -13,15 +16,16 @@ public class StaminaHandler {
      */
     public static float getMaxPossibleStamina(Player player) {
         float maxPossibleStamina = Mth.ceil(player.getMaxHealth()) * StaminaFeature.stamina$perHalfHeart;
-        if (player.getAttribute(StaminaFeature.BONUS_STAMINA_ATTRIBUTE.get()) != null)
-            maxPossibleStamina += (float) player.getAttributeValue(StaminaFeature.BONUS_STAMINA_ATTRIBUTE.get());
+        if (player.getAttribute(StaminaFeature.BONUS_STAMINA_ATTRIBUTE) != null)
+            maxPossibleStamina += (float) player.getAttributeValue(StaminaFeature.BONUS_STAMINA_ATTRIBUTE);
         if (StaminaFeature.stamina$bonusPerLevelOfVigourEnchantment > 0) {
-            int enchLvl = EnchantmentHelper.getEnchantmentLevel(StaminaFeature.VIGOUR.get(), player);
+            Holder<Enchantment> vigour = player.level().registryAccess().holderOrThrow(SEnchantments.VIGOUR);
+            int enchLvl = EnchantmentHelper.getEnchantmentLevel(vigour, player);
             if (enchLvl > 0)
                 maxPossibleStamina += StaminaFeature.stamina$bonusPerLevelOfVigourEnchantment * enchLvl;
         }
         for (MobEffectInstance instance : player.getActiveEffects()) {
-            if (instance.getEffect() instanceof IStaminaModifier staminaModifier)
+            if (instance.getEffect().value() instanceof IStaminaModifier staminaModifier)
                 maxPossibleStamina += staminaModifier.bonusMaxStamina(instance.getAmplifier());
         }
         double armor = player.getAttributeValue(Attributes.ARMOR);

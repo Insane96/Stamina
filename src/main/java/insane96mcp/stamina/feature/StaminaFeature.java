@@ -1,26 +1,17 @@
 package insane96mcp.stamina.feature;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import insane96mcp.insanelib.base.Feature;
-import insane96mcp.insanelib.base.LoadFeature;
-import insane96mcp.insanelib.base.config.Config;
-import insane96mcp.insanelib.event.PlayerSprintEvent;
-import insane96mcp.insanelib.util.ClientUtils;
+import insane96mcp.insanelib.core.ModNBTData;
+import insane96mcp.insanelib.core.feature.Feature;
+import insane96mcp.insanelib.core.feature.LoadFeature;
+import insane96mcp.insanelib.core.feature.config.Config;
 import insane96mcp.insanelib.util.MCUtils;
-import insane96mcp.insanelib.util.ModNBTData;
 import insane96mcp.stamina.Stamina;
 import insane96mcp.stamina.effect.VigourEffect;
-import insane96mcp.stamina.enchantment.VigourEnchantment;
 import insane96mcp.stamina.event.SEventFactory;
-import insane96mcp.stamina.mixin.GuiAccessor;
 import insane96mcp.stamina.network.StaminaSync;
 import insane96mcp.stamina.setup.SRegistries;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -28,39 +19,33 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
-import net.minecraft.world.entity.ai.attributes.*;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.attributes.RangedAttribute;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.phys.Vec2;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
-import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
-import net.minecraftforge.client.gui.overlay.ForgeGui;
-import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
-import net.minecraftforge.common.ForgeMod;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
-import net.minecraftforge.event.entity.living.LivingDamageEvent;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
+import net.neoforged.neoforge.common.NeoForgeMod;
+import net.neoforged.neoforge.event.entity.EntityAttributeModificationEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.living.LivingEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 import java.util.Map;
-import java.util.UUID;
 import java.util.WeakHashMap;
 
-@LoadFeature(module = Stamina.RESOURCE_PREFIX + "base", canBeDisabled = false, description = "Stamina to let the player run and do stuff.")
+@LoadFeature(module = Stamina.RESOURCE_PREFIX + "main", canBeDisabled = false, description = "Stamina to let the player run and do stuff.")
 public class StaminaFeature extends Feature {
-    public static final RegistryObject<MobEffect> VIGOUR_EFFECT = SRegistries.MOB_EFFECTS.register("vigour", () -> new VigourEffect(MobEffectCategory.BENEFICIAL, 0xFCD373));
+    public static final DeferredHolder<MobEffect, VigourEffect> VIGOUR_EFFECT = SRegistries.MOB_EFFECTS.register("vigour", () -> new VigourEffect(MobEffectCategory.BENEFICIAL, 0xFCD373));
     public static final ResourceLocation HEART_OVERLAY = Stamina.location("textures/gui/heart_overlay.png");
     public static final ResourceLocation LOCKED_HEART_OVERLAY = Stamina.location("textures/gui/locked_heart_overlay.png");
 
-    public static final UUID LOCK_SLOWDOWN_UUID = UUID.fromString("b17cbf02-97f8-4c50-9cd1-6dc732593fed");
-    public static final UUID SPRINT_SLOWDOWN_UUID = UUID.fromString("d5c66a92-3f1f-44a2-95a6-1a9e66c6d8e5");
+    public static final ResourceLocation LOCK_SLOWDOWN_ID = Stamina.location("lock_slowdown");
+    public static final ResourceLocation SPRINT_SLOWDOWN_ID = Stamina.location("sprint_slowdown");
 
     public static final ResourceLocation STAMINA = Stamina.location("stamina");
     public static final ResourceLocation STAMINA_LOCKED = Stamina.location("stamina_locked");
@@ -68,9 +53,7 @@ public class StaminaFeature extends Feature {
     public static final ResourceLocation LAST_HURT = Stamina.location("last_hurt");
     public static String OVERLAY = "stamina_overlay";
 
-    public static final RegistryObject<Enchantment> VIGOUR = SRegistries.ENCHANTMENTS.register("vigour", VigourEnchantment::new);
-
-    public static final RegistryObject<Attribute> BONUS_STAMINA_ATTRIBUTE = SRegistries.ATTRIBUTES.register("bonus_stamina", () -> (new RangedAttribute("attribute.name.bonus_stamina", 0, -Double.MAX_VALUE, Double.MAX_VALUE)).setSyncable(true));
+    public static final DeferredHolder<Attribute, Attribute> BONUS_STAMINA_ATTRIBUTE = SRegistries.ATTRIBUTES.register("bonus_stamina", () -> (new RangedAttribute("attribute.name.bonus_stamina", 0, -Double.MAX_VALUE, Double.MAX_VALUE)).setSyncable(true));
 
     @Config(min = 0, description = "How much stamina the player has per half heart. Each 1 stamina is 1 tick of running")
     public static Integer stamina$perHalfHeart = 10;
@@ -89,8 +72,6 @@ public class StaminaFeature extends Feature {
     public static Integer consumption$jump = 10;
     @Config(min = 0, description = "How much stamina the player consumes each tick when swimming")
     public static Double consumption$swim = 0.5d;
-    /*@Config(min = 0, description = "How much stamina the player consumes each tick when rowing boats")
-    public static Double consumption$row = 0.5d;*/
     @Config(min = 0, description = "Multiplier for stamina consumed when the player is swimming with the conduit power effect.")
     public static Double consumption$conduitSwimmingModifier = 0.85d;
     @Config(min = 0, description = "How much stamina the player consumes each tick when mining. If stamina is locked, mining speed is halved")
@@ -137,16 +118,15 @@ public class StaminaFeature extends Feature {
     @SubscribeEvent
     public static void addAttribute(EntityAttributeModificationEvent event) {
         for (EntityType<? extends LivingEntity> entityType : event.getTypes()) {
-            if (event.has(entityType, BONUS_STAMINA_ATTRIBUTE.get()))
+            if (event.has(entityType, BONUS_STAMINA_ATTRIBUTE))
                 continue;
-            event.add(entityType, BONUS_STAMINA_ATTRIBUTE.get());
+            event.add(entityType, BONUS_STAMINA_ATTRIBUTE);
         }
     }
 
     @SubscribeEvent
-    public void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (!(event.player instanceof ServerPlayer player)
-                || event.phase.equals(TickEvent.Phase.START)
+    public void onPlayerTick(PlayerTickEvent.Post event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)
                 || (disable$sprinting && disable$swimming))
             return;
 
@@ -170,7 +150,7 @@ public class StaminaFeature extends Feature {
                 staminaToConsume = consumption$swim.floatValue();
             float percIncrease = 0f;
             for (MobEffectInstance instance : player.getActiveEffects()) {
-                if (instance.getEffect() instanceof IStaminaModifier staminaModifier)
+                if (instance.getEffect().value() instanceof IStaminaModifier staminaModifier)
                     percIncrease += staminaModifier.consumedStaminaModifier(instance.getAmplifier());
             }
             staminaToConsume += (staminaToConsume * percIncrease);
@@ -184,9 +164,6 @@ public class StaminaFeature extends Feature {
             StaminaHandler.consumeStamina(player, staminaToConsume);
             shouldSync = true;
         }
-        /*else if (player.getVehicle() != null && !player.isCreative() && !player.isSpectator()) {
-
-        }*/
         //Regen
         else if (!isMining(player) && stamina != maxStamina && maxStaminaPercentage > lock$belowHealthRatio && maxHealth > lock$belowMaxHealth) {
             float staminaToRecover = regen$perTick.floatValue();
@@ -198,7 +175,7 @@ public class StaminaFeature extends Feature {
             float percIncrease = 0f;
 
             for (MobEffectInstance instance : player.getActiveEffects()) {
-                if (instance.getEffect() instanceof IStaminaModifier staminaModifier)
+                if (instance.getEffect().value() instanceof IStaminaModifier staminaModifier)
                     percIncrease += staminaModifier.regenStaminaModifier(instance.getAmplifier());
             }
             staminaToRecover += (staminaToRecover * percIncrease);
@@ -233,21 +210,23 @@ public class StaminaFeature extends Feature {
     }
 
     private static void slowdownLocked(Player player, boolean isLocked) {
-        player.getAttribute(Attributes.MOVEMENT_SPEED).removeModifier(LOCK_SLOWDOWN_UUID);
+        MCUtils.removeModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_ID);
+        MCUtils.removeModifier(player, NeoForgeMod.SWIM_SPEED, LOCK_SLOWDOWN_ID);
         if (!isLocked
                 || !slowdown$whenLocked$enabled)
             return;
-        MCUtils.applyModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_UUID, "Stamina locked slowdown", -slowdown$whenLocked$amount, AttributeModifier.Operation.MULTIPLY_TOTAL, false);
-        MCUtils.applyModifier(player, ForgeMod.SWIM_SPEED.get(), LOCK_SLOWDOWN_UUID, "Stamina locked slowdown", -slowdown$whenLocked$amount, AttributeModifier.Operation.MULTIPLY_TOTAL, false);
+        MCUtils.applyModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_ID, -slowdown$whenLocked$amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, false);
+        MCUtils.applyModifier(player, NeoForgeMod.SWIM_SPEED, LOCK_SLOWDOWN_ID, -slowdown$whenLocked$amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, false);
     }
 
     private static void slowdownSprinting(Player player, float staminaPercentage, float stamina) {
-        player.getAttribute(Attributes.MOVEMENT_SPEED).removeModifier(SPRINT_SLOWDOWN_UUID);
+        MCUtils.removeModifier(player, Attributes.MOVEMENT_SPEED, SPRINT_SLOWDOWN_ID);
+        MCUtils.removeModifier(player, NeoForgeMod.SWIM_SPEED, SPRINT_SLOWDOWN_ID);
         if (!player.isSprinting()
                 || stamina >= slowdown$sprinting$thresholdFlat && staminaPercentage >= slowdown$sprinting$threshold)
             return;
-        MCUtils.applyModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_UUID, "Stamina sprinting slowdown", -slowdown$sprinting$amount, AttributeModifier.Operation.MULTIPLY_TOTAL, false);
-        MCUtils.applyModifier(player, ForgeMod.SWIM_SPEED.get(), LOCK_SLOWDOWN_UUID, "Stamina swimming slowdown", -slowdown$sprinting$amount, AttributeModifier.Operation.MULTIPLY_TOTAL, false);
+        MCUtils.applyModifier(player, Attributes.MOVEMENT_SPEED, SPRINT_SLOWDOWN_ID, -slowdown$sprinting$amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, false);
+        MCUtils.applyModifier(player, NeoForgeMod.SWIM_SPEED, SPRINT_SLOWDOWN_ID, -slowdown$sprinting$amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, false);
     }
 
     private static final Map<ServerPlayer, Integer> tickMined = new WeakHashMap<>();
@@ -277,7 +256,7 @@ public class StaminaFeature extends Feature {
     }
 
     @SubscribeEvent
-    public void onAttack(LivingDamageEvent event) {
+    public void onAttack(LivingDamageEvent.Post event) {
         if (consumption$outOfCombatMultiplier == 1f)
             return;
 
@@ -296,17 +275,6 @@ public class StaminaFeature extends Feature {
         tickMined.remove(player);
     }
 
-    @OnlyIn(Dist.CLIENT)
-    @SubscribeEvent
-    public void onSprint(PlayerSprintEvent event) {
-        if (!this.isEnabled()
-                || event.getPlayer().getAbilities().instabuild)
-            return;
-
-        if (!StaminaHandler.canSprint(event.getPlayer()) || (disable$sprinting && !event.getPlayer().canStartSwimming()) || (disable$swimming && event.getPlayer().canStartSwimming()))
-            event.setCanceled(true);
-    }
-
     @SubscribeEvent
     public void onPlayerJump(final LivingEvent.LivingJumpEvent event) {
         if (!this.isEnabled()
@@ -317,7 +285,7 @@ public class StaminaFeature extends Feature {
         float consumed = consumption$jump;
         float percIncrease = 0f;
         for (MobEffectInstance instance : player.getActiveEffects()) {
-            if (instance.getEffect() instanceof IStaminaModifier staminaModifier)
+            if (instance.getEffect().value() instanceof IStaminaModifier staminaModifier)
                 percIncrease += staminaModifier.consumedStaminaModifier(instance.getAmplifier());
         }
         consumed += (consumed * percIncrease);
@@ -336,129 +304,7 @@ public class StaminaFeature extends Feature {
         StaminaHandler.setStamina(event.getEntity(), Float.MAX_VALUE);
     }
 
-    @OnlyIn(Dist.CLIENT)
-    @SubscribeEvent
-    public static void onRenderGuiOverlayPre(RegisterGuiOverlaysEvent event) {
-        event.registerAbove(VanillaGuiOverlay.PLAYER_HEALTH.id(), OVERLAY, (gui, guiGraphics, partialTicks, screenWidth, screenHeight) -> {
-            if (isEnabled(StaminaFeature.class) && gui.shouldDrawSurvivalElements())
-                renderStamina(gui, guiGraphics);
-        });
-    }
-
     public static boolean canConsumeHunger(Player player) {
         return lock$consumeHungerRatio > 0f && player.getFoodData().getFoodLevel() > 0 && !ModList.get().isLoaded("nohunger");
-    }
-
-    private static final Vec2 UV_STAMINA = new Vec2(0, 9);
-
-    @OnlyIn(Dist.CLIENT)
-    public static void renderStamina(ForgeGui gui, GuiGraphics guiGraphics) {
-        Minecraft mc = Minecraft.getInstance();
-        Player player = mc.player;
-        assert player != null;
-
-        ((GuiAccessor) gui).getRandom().setSeed(gui.getGuiTicks() * 312871L);
-
-        boolean shouldRenderOnOneRow = ModList.get().isLoaded("mantle");
-
-        int health = Mth.ceil(player.getHealth());
-        if (StaminaFeature.stamina$boundToMaxHealth)
-            health = Mth.ceil(player.getMaxHealth());
-
-        AttributeInstance attrMaxHealth = player.getAttribute(Attributes.MAX_HEALTH);
-        float healthMax = Math.max((float) attrMaxHealth.getValue(),  health);
-        int healthMaxI = Mth.ceil(healthMax);
-        int absorp = Mth.ceil(player.getAbsorptionAmount());
-        int halfAbsorp = Mth.ceil(player.getAbsorptionAmount() / 2);
-
-        int healthRows = Mth.ceil((healthMax + absorp) / 2.0F / 10.0F);
-        int rowHeight = Math.max(10 - (healthRows - 2), 3);
-        int leftHeight = gui.leftHeight;
-        if (!shouldRenderOnOneRow) {
-            leftHeight -= (healthRows * rowHeight);
-            if (rowHeight != 10)
-                leftHeight -= 10 - rowHeight;
-        }
-        else
-            leftHeight -= 10;
-        if (absorp > 0) {
-            if (shouldRenderOnOneRow)
-                leftHeight -= 10;
-        }
-
-        int right = mc.getWindow().getGuiScaledWidth() / 2 - 91;
-        int top = mc.getWindow().getGuiScaledHeight() - leftHeight;
-        float staminaPerHalfHeart = StaminaHandler.getMaxStamina(player) / health;
-        if (shouldRenderOnOneRow)
-            staminaPerHalfHeart = StaminaHandler.getMaxStamina(player) / Math.min(health, 20f);
-        int halfHeartsMaxStamina = Mth.ceil(StaminaHandler.getMaxStamina(player) / staminaPerHalfHeart);
-        int halfHeartsStamina = Mth.ceil(StaminaHandler.getStamina(player) / staminaPerHalfHeart);
-        int height = 9;
-        int regen = -1;
-        if (player.hasEffect(MobEffects.REGENERATION))
-            regen = gui.getGuiTicks() % Mth.ceil(healthMax + 5.0F);
-
-        ResourceLocation texture = HEART_OVERLAY;
-        if (StaminaHandler.isStaminaLocked(player))
-            texture = LOCKED_HEART_OVERLAY;
-
-        int oldJiggle = 0;
-
-        for (int a = 0; a < halfAbsorp; a++) {
-            ((GuiAccessor) gui).getRandom().nextInt(2);
-        }
-
-        for (int hp = healthMaxI - 1; hp >= 0; hp--) {
-            //Doesn't work with absorption ...
-            int jiggle = 0;
-            if ((hp + 1) % 2 == 0) {
-                if (hp / 2 == regen)
-                    jiggle -= 2;
-                if (health + absorp <= 4)
-                    jiggle += ((GuiAccessor) gui).getRandom().nextInt(2);
-                oldJiggle = jiggle;
-            }
-            else
-                jiggle = oldJiggle;
-            if (hp >= halfHeartsMaxStamina || hp < halfHeartsStamina)
-                continue;
-            int v = (int) UV_STAMINA.y;
-            int width;
-            int u;
-            int r;
-            if (hp % 2 == 0) {
-                width = 4;
-                u = (int) UV_STAMINA.x + 1;
-                r = 1;
-            }
-            else {
-                width = 4;
-                u = (int) UV_STAMINA.x + 5;
-                r = 5;
-            }
-
-            int pY = top - (hp / 20 * rowHeight) + jiggle;
-            if (shouldRenderOnOneRow)
-                pY = top + jiggle;
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            guiGraphics.blit(texture, right + (hp / 2 * 8) + r - (hp / 20 * 80), pY, u, v, width, height, 9, 9);
-            RenderSystem.disableBlend();
-        }
-        ClientUtils.resetRenderColor();
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    @SubscribeEvent
-    public void debugScreen(CustomizeGuiOverlayEvent.DebugText event) {
-        if (!this.isEnabled())
-            return;
-        Minecraft mc = Minecraft.getInstance();
-        LocalPlayer playerEntity = mc.player;
-        if (playerEntity == null)
-            return;
-        if (mc.options.renderDebug && !mc.showOnlyReducedInfo()) {
-            event.getLeft().add(String.format("Stamina: %.1f/%.1f; Locked: %s", StaminaHandler.getStamina(playerEntity), StaminaHandler.getMaxStamina(playerEntity), StaminaHandler.isStaminaLocked(playerEntity)));
-        }
     }
 }
