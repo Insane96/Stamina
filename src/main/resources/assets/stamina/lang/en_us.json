@@ -5,6 +5,9 @@
     "enchantment.stamina.vigour": "Vigour",
     "enchantment.stamina.vigour.desc": "Increases max stamina",
 
+    "enchantment.stamina.curse_of_weariness": "Curse of Weariness",
+    "enchantment.stamina.curse_of_weariness.desc": "Reduces max stamina",
+
     "attribute.name.bonus_stamina": "Bonus Stamina",
 
     "commands.insanestamina.get": "%s's stamina: %s"

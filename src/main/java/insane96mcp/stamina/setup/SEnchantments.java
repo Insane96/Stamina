@@ -12,6 +12,7 @@ import net.minecraft.world.item.enchantment.Enchantment;
  */
 public class SEnchantments {
     public static final ResourceKey<Enchantment> VIGOUR = key("vigour");
+    public static final ResourceKey<Enchantment> CURSE_OF_WEARINESS = key("curse_of_weariness");
 
     private static ResourceKey<Enchantment> key(String id) {
         return ResourceKey.create(Registries.ENCHANTMENT, Stamina.location(id));

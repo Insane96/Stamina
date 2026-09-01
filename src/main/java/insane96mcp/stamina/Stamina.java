@@ -5,6 +5,7 @@ import insane96mcp.insanelib.setup.ILModConfig;
 import insane96mcp.stamina.command.SCommand;
 import insane96mcp.stamina.data.mpr.SConditionsRegistry;
 import insane96mcp.stamina.data.mpr.SPropertiesRegistry;
+import insane96mcp.stamina.feature.StaminaFeature;
 import insane96mcp.stamina.network.NetworkHandler;
 import insane96mcp.stamina.setup.SRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -36,6 +37,7 @@ public class Stamina
         SRegistries.REGISTRIES.forEach(register -> register.register(modEventBus));
 
         modEventBus.addListener(NetworkHandler::register);
+        modEventBus.addListener(StaminaFeature::addAttribute);
 
         if (ModList.get().isLoaded("mobspropertiesrandomness")) {
             SConditionsRegistry.init(modEventBus);

@@ -5,6 +5,9 @@
     "enchantment.stamina.vigour": "Vigore",
     "enchantment.stamina.vigour.desc": "Aumenta la stamina massima",
 
+    "enchantment.stamina.curse_of_weariness": "Maledizione della Spossatezza",
+    "enchantment.stamina.curse_of_weariness.desc": "Riduce la stamina massima",
+
     "attribute.name.bonus_stamina": "Stamina Bonus",
 
     "commands.insanestamina.get": "Stamina di %s: %.1f"

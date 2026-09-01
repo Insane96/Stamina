@@ -57,8 +57,10 @@ public class StaminaFeature extends Feature {
 
     @Config(min = 0, description = "How much stamina the player has per half heart. Each 1 stamina is 1 tick of running")
     public static Integer stamina$perHalfHeart = 10;
-    @Config(min = 0)
-    public static Integer stamina$bonusPerLevelOfVigourEnchantment = 40;
+    @Config(min = 0, description = "Percentage of max stamina added per level of Vigour")
+    public static Double stamina$bonusPercentagePerLevelOfVigourEnchantment = 0.20d;
+    @Config(min = 0, description = "Percentage of max stamina removed per level of Curse of Weariness")
+    public static Double stamina$reductionPercentagePerLevelOfCurseOfWeariness = 0.40d;
     @Config(min = 0)
     public static Integer stamina$bonusPerLevelOfVigourEffect = 40;
     @Config(min = 0)
@@ -115,7 +117,6 @@ public class StaminaFeature extends Feature {
     @Config(description = "Disable swimming altogether")
     public static Boolean disable$swimming = false;
 
-    @SubscribeEvent
     public static void addAttribute(EntityAttributeModificationEvent event) {
         for (EntityType<? extends LivingEntity> entityType : event.getTypes()) {
             if (event.has(entityType, BONUS_STAMINA_ATTRIBUTE))

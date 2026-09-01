@@ -1,12 +1,12 @@
 {
   "description": {
-    "translate": "enchantment.stamina.vigour"
+    "translate": "enchantment.stamina.curse_of_weariness"
   },
   "primary_items": "#minecraft:enchantable/chest_armor",
   "supported_items": "#minecraft:enchantable/chest_armor",
   "exclusive_set": "#stamina:exclusive_set/vigour",
-  "weight": 2,
-  "max_level": 2,
+  "weight": 1,
+  "max_level": 1,
   "min_cost": {
     "base": 20,
     "per_level_above_first": 20
@@ -15,7 +15,7 @@
     "base": 40,
     "per_level_above_first": 20
   },
-  "anvil_cost": 4,
+  "anvil_cost": 8,
   "slots": [
     "armor"
   ],

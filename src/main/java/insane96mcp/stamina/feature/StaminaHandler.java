@@ -18,11 +18,17 @@ public class StaminaHandler {
         float maxPossibleStamina = Mth.ceil(player.getMaxHealth()) * StaminaFeature.stamina$perHalfHeart;
         if (player.getAttribute(StaminaFeature.BONUS_STAMINA_ATTRIBUTE) != null)
             maxPossibleStamina += (float) player.getAttributeValue(StaminaFeature.BONUS_STAMINA_ATTRIBUTE);
-        if (StaminaFeature.stamina$bonusPerLevelOfVigourEnchantment > 0) {
+        if (StaminaFeature.stamina$bonusPercentagePerLevelOfVigourEnchantment > 0) {
             Holder<Enchantment> vigour = player.level().registryAccess().holderOrThrow(SEnchantments.VIGOUR);
             int enchLvl = EnchantmentHelper.getEnchantmentLevel(vigour, player);
             if (enchLvl > 0)
-                maxPossibleStamina += StaminaFeature.stamina$bonusPerLevelOfVigourEnchantment * enchLvl;
+                maxPossibleStamina *= (float) (1d + StaminaFeature.stamina$bonusPercentagePerLevelOfVigourEnchantment * enchLvl);
+        }
+        if (StaminaFeature.stamina$reductionPercentagePerLevelOfCurseOfWeariness > 0) {
+            Holder<Enchantment> curseOfWeariness = player.level().registryAccess().holderOrThrow(SEnchantments.CURSE_OF_WEARINESS);
+            int curseLvl = EnchantmentHelper.getEnchantmentLevel(curseOfWeariness, player);
+            if (curseLvl > 0)
+                maxPossibleStamina *= (float) Math.max(0d, 1d - StaminaFeature.stamina$reductionPercentagePerLevelOfCurseOfWeariness * curseLvl);
         }
         for (MobEffectInstance instance : player.getActiveEffects()) {
             if (instance.getEffect().value() instanceof IStaminaModifier staminaModifier)
@@ -30,7 +36,7 @@ public class StaminaHandler {
         }
         double armor = player.getAttributeValue(Attributes.ARMOR);
         maxPossibleStamina *= (float) (1f - (armor * StaminaFeature.stamina$percentageReductionPerArmorPoint));
-        return maxPossibleStamina;
+        return Math.max(0f, maxPossibleStamina);
     }
 
     /**
