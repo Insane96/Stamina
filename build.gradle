@@ -87,9 +87,10 @@ configurations {
 dependencies {
     implementation "maven.modrinth:insanelib:${insanelib_version}"
 
-    // Mobs Properties Randomness integration is fully optional at runtime (checked via ModList),
-    // so it's only needed at compile time.
+    // Mobs Properties Randomness and Rune Enchanting integrations are fully optional at runtime (checked via
+    // ModList), so they're only needed at compile time.
     compileOnly "maven.modrinth:mobs-properties-randomness:${mpr_version}"
+    compileOnly "maven.modrinth:rune-enchanting:${runeenchanting_version}"
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {

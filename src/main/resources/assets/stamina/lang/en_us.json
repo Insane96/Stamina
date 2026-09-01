@@ -8,6 +8,14 @@
     "enchantment.stamina.curse_of_weariness": "Curse of Weariness",
     "enchantment.stamina.curse_of_weariness.desc": "Reduces max stamina",
 
+    "rune.stamina.vigour": "Vigour",
+    "rune.stamina.vigour.description": "Increases max stamina",
+    "rune.stamina.vigour.info": "Max stamina: +%s%%",
+
+    "rune.stamina.curse_of_weariness": "Curse of Weariness",
+    "rune.stamina.curse_of_weariness.description": "Reduces max stamina",
+    "rune.stamina.curse_of_weariness.info": "Max stamina: -%s%%",
+
     "attribute.name.bonus_stamina": "Bonus Stamina",
 
     "commands.insanestamina.get": "%s's stamina: %s"

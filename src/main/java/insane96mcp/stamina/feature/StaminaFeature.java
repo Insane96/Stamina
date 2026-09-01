@@ -65,6 +65,11 @@ public class StaminaFeature extends Feature {
     public static Integer stamina$bonusPerLevelOfVigourEffect = 40;
     @Config(min = 0)
     public static Double stamina$percentageReductionPerArmorPoint = 0.025d;
+
+    @Config(description = "If Rune Enchanting is installed, whether chestplate-only runes granting Vigour/Curse of Weariness are enabled.")
+    public static Boolean enchantments$runesEnabled = true;
+    @Config(min = 0, description = "Which level of Vigour the Vigour rune is equivalent to.")
+    public static Integer enchantments$vigourRuneLevelEquivalent = 2;
     @Config(description = "If enabled, max stamina will always be bound to max health and no longer with current health")
     public static Boolean stamina$boundToMaxHealth = false;
 

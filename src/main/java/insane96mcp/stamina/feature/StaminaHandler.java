@@ -1,14 +1,16 @@
 package insane96mcp.stamina.feature;
 
 import insane96mcp.insanelib.core.ModNBTData;
+import insane96mcp.stamina.module.RuneCompat;
 import insane96mcp.stamina.setup.SEnchantments;
 import net.minecraft.core.Holder;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 
 public class StaminaHandler {
     /**
@@ -18,15 +20,16 @@ public class StaminaHandler {
         float maxPossibleStamina = Mth.ceil(player.getMaxHealth()) * StaminaFeature.stamina$perHalfHeart;
         if (player.getAttribute(StaminaFeature.BONUS_STAMINA_ATTRIBUTE) != null)
             maxPossibleStamina += (float) player.getAttributeValue(StaminaFeature.BONUS_STAMINA_ATTRIBUTE);
+        ItemStack chest = player.getItemBySlot(EquipmentSlot.CHEST);
         if (StaminaFeature.stamina$bonusPercentagePerLevelOfVigourEnchantment > 0) {
             Holder<Enchantment> vigour = player.level().registryAccess().holderOrThrow(SEnchantments.VIGOUR);
-            int enchLvl = EnchantmentHelper.getEnchantmentLevel(vigour, player);
+            int enchLvl = chest.getEnchantmentLevel(vigour) + RuneCompat.getRuneLevel(chest, SEnchantments.VIGOUR);
             if (enchLvl > 0)
                 maxPossibleStamina *= (float) (1d + StaminaFeature.stamina$bonusPercentagePerLevelOfVigourEnchantment * enchLvl);
         }
         if (StaminaFeature.stamina$reductionPercentagePerLevelOfCurseOfWeariness > 0) {
             Holder<Enchantment> curseOfWeariness = player.level().registryAccess().holderOrThrow(SEnchantments.CURSE_OF_WEARINESS);
-            int curseLvl = EnchantmentHelper.getEnchantmentLevel(curseOfWeariness, player);
+            int curseLvl = chest.getEnchantmentLevel(curseOfWeariness) + RuneCompat.getRuneLevel(chest, SEnchantments.CURSE_OF_WEARINESS);
             if (curseLvl > 0)
                 maxPossibleStamina *= (float) Math.max(0d, 1d - StaminaFeature.stamina$reductionPercentagePerLevelOfCurseOfWeariness * curseLvl);
         }

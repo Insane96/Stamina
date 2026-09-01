@@ -6,3 +6,4 @@ Port to 1.21.1 (NeoForge)
 * Added Curse of Weariness, a curse enchantment that reduces max stamina by 40% (opposite of Vigour)
   * Like other curses, it's not obtainable from the enchanting table or villagers, only from loot and fishing
   * Can't be on the same piece as Vigour
+* If Rune Enchanting is installed, Vigour and Curse of Weariness are also available as chestplate runes

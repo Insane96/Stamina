@@ -6,6 +6,8 @@ import insane96mcp.stamina.command.SCommand;
 import insane96mcp.stamina.data.mpr.SConditionsRegistry;
 import insane96mcp.stamina.data.mpr.SPropertiesRegistry;
 import insane96mcp.stamina.feature.StaminaFeature;
+import insane96mcp.stamina.module.RuneCompat;
+import insane96mcp.stamina.module.SRunes;
 import insane96mcp.stamina.network.NetworkHandler;
 import insane96mcp.stamina.setup.SRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -43,6 +45,9 @@ public class Stamina
             SConditionsRegistry.init(modEventBus);
             SPropertiesRegistry.init(modEventBus);
         }
+
+        if (RuneCompat.isLoaded())
+            new SRunes(modEventBus);
     }
 
     @SubscribeEvent

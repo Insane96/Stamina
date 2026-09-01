@@ -8,6 +8,14 @@
     "enchantment.stamina.curse_of_weariness": "Maledizione della Spossatezza",
     "enchantment.stamina.curse_of_weariness.desc": "Riduce la stamina massima",
 
+    "rune.stamina.vigour": "Vigore",
+    "rune.stamina.vigour.description": "Aumenta la stamina massima",
+    "rune.stamina.vigour.info": "Stamina massima: +%s%%",
+
+    "rune.stamina.curse_of_weariness": "Maledizione della Spossatezza",
+    "rune.stamina.curse_of_weariness.description": "Riduce la stamina massima",
+    "rune.stamina.curse_of_weariness.info": "Stamina massima: -%s%%",
+
     "attribute.name.bonus_stamina": "Stamina Bonus",
 
     "commands.insanestamina.get": "Stamina di %s: %.1f"
