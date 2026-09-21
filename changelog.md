@@ -1,3 +1,6 @@
+# 2.0.0.1
+* Fixed rune enchanting curse not being a curse
+
 # 2.0.0.0
 Port to 1.21.1 (NeoForge)
 * Vigour enchantment is now data-driven
