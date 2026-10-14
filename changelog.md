@@ -1,3 +1,6 @@
+# 2.0.0.2
+* Server startup crash fix
+
 # 2.0.0.1
 * Fixed rune enchanting curse not being a curse
 

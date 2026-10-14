@@ -4,7 +4,6 @@ import insane96mcp.insanelib.core.ModNBTData;
 import insane96mcp.stamina.Stamina;
 import insane96mcp.stamina.feature.StaminaFeature;
 import insane96mcp.stamina.feature.StaminaHandler;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -32,7 +31,7 @@ public record StaminaSync(float stamina, boolean staminaLocked) implements Custo
 
     public static void handle(final StaminaSync payload, final IPayloadContext context) {
         context.enqueueWork(() -> {
-            Player player = Minecraft.getInstance().player;
+            Player player = context.player();
             if (player == null)
                 return;
             ModNBTData.put(player, StaminaFeature.STAMINA, payload.stamina());
