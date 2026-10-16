@@ -38,3 +38,9 @@ run/
 **/src/generated/**/.cache/
 repo/
 !**/src/**/repo/
+
+### Other ###
+runs/
+run-data/
+run-server/
+.claude/

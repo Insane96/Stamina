@@ -77,6 +77,14 @@ public class StaminaHandler {
     }
 
     /**
+     * Returns true if the player's actions consume stamina (not in creative/spectator and the stamina isn't fully disabled)
+     */
+    public static boolean usesStamina(Player player) {
+        return !player.isCreative() && !player.isSpectator()
+                && !(StaminaFeature.disable$sprinting && StaminaFeature.disable$swimming);
+    }
+
+    /**
      * Returns true if the player can sprint
      */
     public static boolean canSprint(Player player) {

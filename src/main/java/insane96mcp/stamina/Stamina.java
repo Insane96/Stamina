@@ -3,18 +3,13 @@ package insane96mcp.stamina;
 import com.mojang.logging.LogUtils;
 import insane96mcp.insanelib.setup.ILModConfig;
 import insane96mcp.stamina.command.SCommand;
-import insane96mcp.stamina.data.mpr.SConditionsRegistry;
-import insane96mcp.stamina.data.mpr.SPropertiesRegistry;
 import insane96mcp.stamina.feature.StaminaFeature;
-import insane96mcp.stamina.module.RuneCompat;
-import insane96mcp.stamina.module.SRunes;
 import insane96mcp.stamina.network.NetworkHandler;
 import insane96mcp.stamina.setup.SRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.NeoForge;
@@ -41,13 +36,14 @@ public class Stamina
         modEventBus.addListener(NetworkHandler::register);
         modEventBus.addListener(StaminaFeature::addAttribute);
 
-        if (ModList.get().isLoaded("mobspropertiesrandomness")) {
-            SConditionsRegistry.init(modEventBus);
-            SPropertiesRegistry.init(modEventBus);
-        }
+        // TODO Mobs Properties Randomness and Rune Enchanting have no 26.1.2 version yet, re-enable (with the dependencies in build.gradle) when they're ported
+        //if (ModList.get().isLoaded("mobspropertiesrandomness")) {
+        //    SConditionsRegistry.init(modEventBus);
+        //    SPropertiesRegistry.init(modEventBus);
+        //}
 
-        if (RuneCompat.isLoaded())
-            new SRunes(modEventBus);
+        //if (RuneCompat.isLoaded())
+        //    new SRunes(modEventBus);
     }
 
     @SubscribeEvent
@@ -55,8 +51,8 @@ public class Stamina
         SCommand.register(event.getDispatcher());
     }
 
-    public static ResourceLocation location(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+    public static Identifier location(String path) {
+        return Identifier.fromNamespaceAndPath(MOD_ID, path);
     }
 
     public static String lang(String path) {

@@ -38,7 +38,9 @@ public class RuneCompat {
         if (levelEquivalent <= 0)
             return 0;
 
-        return SRunes.getRuneLevel(stack, enchantment, levelEquivalent);
+        // TODO Rune Enchanting has no 26.1.2 version yet, SRunes is excluded from compilation until it's ported
+        //return SRunes.getRuneLevel(stack, enchantment, levelEquivalent);
+        return 0;
     }
 
     private static int levelEquivalentFor(ResourceKey<Enchantment> enchantment) {

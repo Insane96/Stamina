@@ -1,5 +1,6 @@
 package insane96mcp.stamina.feature;
 
+import com.mojang.serialization.MapCodec;
 import insane96mcp.insanelib.core.ModNBTData;
 import insane96mcp.insanelib.core.feature.Feature;
 import insane96mcp.insanelib.core.feature.LoadFeature;
@@ -7,10 +8,12 @@ import insane96mcp.insanelib.core.feature.config.Config;
 import insane96mcp.insanelib.util.MCUtils;
 import insane96mcp.stamina.Stamina;
 import insane96mcp.stamina.effect.VigourEffect;
+import insane96mcp.stamina.enchantment.ConsumeStaminaEffect;
+import insane96mcp.stamina.enchantment.HasStaminaCondition;
 import insane96mcp.stamina.event.SEventFactory;
 import insane96mcp.stamina.network.StaminaSync;
 import insane96mcp.stamina.setup.SRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
@@ -24,6 +27,8 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.attributes.RangedAttribute;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.enchantment.effects.EnchantmentEntityEffect;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.common.NeoForgeMod;
@@ -41,16 +46,18 @@ import java.util.WeakHashMap;
 @LoadFeature(module = Stamina.RESOURCE_PREFIX + "main", canBeDisabled = false, description = "Stamina to let the player run and do stuff.")
 public class StaminaFeature extends Feature {
     public static final DeferredHolder<MobEffect, VigourEffect> VIGOUR_EFFECT = SRegistries.MOB_EFFECTS.register("vigour", () -> new VigourEffect(MobEffectCategory.BENEFICIAL, 0xFCD373));
-    public static final ResourceLocation HEART_OVERLAY = Stamina.location("textures/gui/heart_overlay.png");
-    public static final ResourceLocation LOCKED_HEART_OVERLAY = Stamina.location("textures/gui/locked_heart_overlay.png");
+    public static final DeferredHolder<MapCodec<? extends EnchantmentEntityEffect>, MapCodec<ConsumeStaminaEffect>> CONSUME_STAMINA_EFFECT = SRegistries.ENCHANTMENT_ENTITY_EFFECT_TYPES.register("consume_stamina", () -> ConsumeStaminaEffect.CODEC);
+    public static final DeferredHolder<MapCodec<? extends LootItemCondition>, MapCodec<HasStaminaCondition>> HAS_STAMINA_CONDITION = SRegistries.LOOT_CONDITION_TYPES.register("has_stamina", () -> HasStaminaCondition.CODEC);
+    public static final Identifier HEART_OVERLAY = Stamina.location("textures/gui/heart_overlay.png");
+    public static final Identifier LOCKED_HEART_OVERLAY = Stamina.location("textures/gui/locked_heart_overlay.png");
 
-    public static final ResourceLocation LOCK_SLOWDOWN_ID = Stamina.location("lock_slowdown");
-    public static final ResourceLocation SPRINT_SLOWDOWN_ID = Stamina.location("sprint_slowdown");
+    public static final Identifier LOCK_SLOWDOWN_ID = Stamina.location("lock_slowdown");
+    public static final Identifier SPRINT_SLOWDOWN_ID = Stamina.location("sprint_slowdown");
 
-    public static final ResourceLocation STAMINA = Stamina.location("stamina");
-    public static final ResourceLocation STAMINA_LOCKED = Stamina.location("stamina_locked");
-    public static final ResourceLocation LAST_HIT = Stamina.location("last_hit");
-    public static final ResourceLocation LAST_HURT = Stamina.location("last_hurt");
+    public static final Identifier STAMINA = Stamina.location("stamina");
+    public static final Identifier STAMINA_LOCKED = Stamina.location("stamina_locked");
+    public static final Identifier LAST_HIT = Stamina.location("last_hit");
+    public static final Identifier LAST_HURT = Stamina.location("last_hurt");
     public static String OVERLAY = "stamina_overlay";
 
     public static final DeferredHolder<Attribute, Attribute> BONUS_STAMINA_ATTRIBUTE = SRegistries.ATTRIBUTES.register("bonus_stamina", () -> (new RangedAttribute("attribute.name.bonus_stamina", 0, -Double.MAX_VALUE, Double.MAX_VALUE)).setSyncable(true));

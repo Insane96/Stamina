@@ -1,16 +1,18 @@
 package insane96mcp.stamina.feature;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import insane96mcp.insanelib.core.feature.Feature;
 import insane96mcp.insanelib.event.PlayerSprintEvent;
-import insane96mcp.insanelib.util.ClientUtils;
 import insane96mcp.stamina.Stamina;
 import insane96mcp.stamina.mixin.GuiAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.debug.DebugScreenEntry;
+import net.minecraft.client.gui.components.debug.DebugScreenEntryStatus;
+import net.minecraft.client.gui.components.debug.DebugScreenProfile;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -21,7 +23,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.CustomizeGuiOverlayEvent;
+import net.neoforged.neoforge.client.event.RegisterDebugEntriesEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
@@ -38,7 +40,7 @@ public class StaminaFeatureClient {
         });
     }
 
-    public static void renderStamina(Gui gui, GuiGraphics guiGraphics) {
+    public static void renderStamina(Gui gui, GuiGraphicsExtractor guiGraphics) {
         Minecraft mc = Minecraft.getInstance();
         Player player = mc.player;
         if (player == null)
@@ -85,7 +87,7 @@ public class StaminaFeatureClient {
         if (player.hasEffect(MobEffects.REGENERATION))
             regen = gui.getGuiTicks() % Mth.ceil(healthMax + 5.0F);
 
-        ResourceLocation texture = StaminaFeature.HEART_OVERLAY;
+        Identifier texture = StaminaFeature.HEART_OVERLAY;
         if (StaminaHandler.isStaminaLocked(player))
             texture = StaminaFeature.LOCKED_HEART_OVERLAY;
 
@@ -127,12 +129,8 @@ public class StaminaFeatureClient {
             int pY = top - (hp / 20 * rowHeight) + jiggle;
             if (shouldRenderOnOneRow)
                 pY = top + jiggle;
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            guiGraphics.blit(texture, right + (hp / 2 * 8) + r - (hp / 20 * 80), pY, u, v, width, height, 9, 9);
-            RenderSystem.disableBlend();
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture, right + (hp / 2 * 8) + r - (hp / 20 * 80), pY, u, v, width, height, 9, 9);
         }
-        ClientUtils.resetRenderColor();
     }
 
     @SubscribeEvent
@@ -146,15 +144,17 @@ public class StaminaFeatureClient {
     }
 
     @SubscribeEvent
-    public static void debugScreen(CustomizeGuiOverlayEvent.DebugText event) {
+    public static void registerDebugEntries(RegisterDebugEntriesEvent event) {
+        event.register(StaminaFeature.STAMINA, STAMINA_DEBUG_ENTRY);
+        event.includeInProfile(StaminaFeature.STAMINA, DebugScreenProfile.DEFAULT, DebugScreenEntryStatus.IN_OVERLAY);
+    }
+
+    private static final DebugScreenEntry STAMINA_DEBUG_ENTRY = (displayer, serverOrClientLevel, clientChunk, serverChunk) -> {
         if (!Feature.isEnabled(StaminaFeature.class))
             return;
-        Minecraft mc = Minecraft.getInstance();
-        LocalPlayer playerEntity = mc.player;
+        LocalPlayer playerEntity = Minecraft.getInstance().player;
         if (playerEntity == null)
             return;
-        if (mc.getDebugOverlay().showDebugScreen() && !mc.showOnlyReducedInfo()) {
-            event.getLeft().add(String.format("Stamina: %.1f/%.1f; Locked: %s", StaminaHandler.getStamina(playerEntity), StaminaHandler.getMaxStamina(playerEntity), StaminaHandler.isStaminaLocked(playerEntity)));
-        }
-    }
+        displayer.addLine(String.format("Stamina: %.1f/%.1f; Locked: %s", StaminaHandler.getStamina(playerEntity), StaminaHandler.getMaxStamina(playerEntity), StaminaHandler.isStaminaLocked(playerEntity)));
+    };
 }

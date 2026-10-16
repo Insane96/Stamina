@@ -12,7 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 
 public class SCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("insanestamina").requires(source -> source.hasPermission(2))
+        dispatcher.register(Commands.literal("insanestamina").requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.literal("set")
                         .then(Commands.argument("players", EntityArgument.players())
                                 .then(Commands.argument("amount", FloatArgumentType.floatArg(0))
