@@ -1,3 +1,6 @@
+# 2.0.0.4
+* Fixed the stamina overlay shaking differently from the hearts at low health after a few minutes of playing
+
 # 2.0.0.3
 * Fixed Vigour not being obtainable from the enchanting table, villagers and loot
 

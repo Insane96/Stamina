@@ -44,7 +44,8 @@ public class StaminaFeatureClient {
         if (player == null)
             return;
 
-        ((GuiAccessor) gui).getRandom().setSeed(gui.getGuiTicks() * 312871L);
+        // Same seed as vanilla Gui#renderPlayerHealth (int multiplication, overflow included) so the low health shake matches the hearts
+        ((GuiAccessor) gui).getRandom().setSeed(gui.getGuiTicks() * 312871);
 
         boolean shouldRenderOnOneRow = ModList.get().isLoaded("mantle");
 
