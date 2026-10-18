@@ -1,3 +1,6 @@
+# 3.0.0.1-beta
+* Fixed the stamina overlay shaking differently from the hearts at low health after a few minutes of playing
+
 # 3.0.0.0-beta
 * Ported to Minecraft 26.1.2
 * Mobs Properties Randomness and Rune Enchanting integrations temporarily disabled (they're not yet available for 26.1.2)
