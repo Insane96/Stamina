@@ -2,6 +2,8 @@
 * The config is now a SERVER config and is synced to clients, so on dedicated servers the stamina bar and sprinting follow the server's values
   * The config file is now `config/stamina-server.toml`. `saves/<world>/serverconfig/stamina-server.toml` can be used as a per-world override
   * The old `stamina-common.toml` is no longer read: if you customized it, copy your values to `stamina-server.toml` manually
+* Stamina is now required on both client and server: clients without the mod can no longer join servers with it, and clients with the mod can no longer join servers without it (this fixes a crash when joining a server without Stamina)
+* Fixed a crash if Vigour or Curse of Weariness are removed by a datapack
 * Requires InsaneLib 2.4.34.0 or newer
 
 # 2.0.0.4

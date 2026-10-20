@@ -3,7 +3,8 @@ package insane96mcp.stamina.feature;
 import insane96mcp.insanelib.core.ModNBTData;
 import insane96mcp.stamina.module.RuneCompat;
 import insane96mcp.stamina.setup.SEnchantments;
-import net.minecraft.core.Holder;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -22,14 +23,12 @@ public class StaminaHandler {
             maxPossibleStamina += (float) player.getAttributeValue(StaminaFeature.BONUS_STAMINA_ATTRIBUTE);
         ItemStack chest = player.getItemBySlot(EquipmentSlot.CHEST);
         if (StaminaFeature.stamina$bonusPercentagePerLevelOfVigourEnchantment > 0) {
-            Holder<Enchantment> vigour = player.level().registryAccess().holderOrThrow(SEnchantments.VIGOUR);
-            int enchLvl = chest.getEnchantmentLevel(vigour) + RuneCompat.getRuneLevel(chest, SEnchantments.VIGOUR);
+            int enchLvl = getEnchantmentLevel(player, chest, SEnchantments.VIGOUR) + RuneCompat.getRuneLevel(chest, SEnchantments.VIGOUR);
             if (enchLvl > 0)
                 maxPossibleStamina *= (float) (1d + StaminaFeature.stamina$bonusPercentagePerLevelOfVigourEnchantment * enchLvl);
         }
         if (StaminaFeature.stamina$reductionPercentagePerLevelOfCurseOfWeariness > 0) {
-            Holder<Enchantment> curseOfWeariness = player.level().registryAccess().holderOrThrow(SEnchantments.CURSE_OF_WEARINESS);
-            int curseLvl = chest.getEnchantmentLevel(curseOfWeariness) + RuneCompat.getRuneLevel(chest, SEnchantments.CURSE_OF_WEARINESS);
+            int curseLvl = getEnchantmentLevel(player, chest, SEnchantments.CURSE_OF_WEARINESS) + RuneCompat.getRuneLevel(chest, SEnchantments.CURSE_OF_WEARINESS);
             if (curseLvl > 0)
                 maxPossibleStamina *= (float) Math.max(0d, 1d - StaminaFeature.stamina$reductionPercentagePerLevelOfCurseOfWeariness * curseLvl);
         }
@@ -40,6 +39,16 @@ public class StaminaHandler {
         double armor = player.getAttributeValue(Attributes.ARMOR);
         maxPossibleStamina *= (float) (1f - (armor * StaminaFeature.stamina$percentageReductionPerArmorPoint));
         return Math.max(0f, maxPossibleStamina);
+    }
+
+    /**
+     * Returns the level of the enchantment on the stack, or 0 if the enchantment isn't in the registry (e.g. filtered out by a datapack)
+     */
+    private static int getEnchantmentLevel(Player player, ItemStack stack, ResourceKey<Enchantment> enchantment) {
+        return player.level().registryAccess().lookup(Registries.ENCHANTMENT)
+                .flatMap(registry -> registry.get(enchantment))
+                .map(holder -> stack.getEnchantmentLevel(holder))
+                .orElse(0);
     }
 
     /**
