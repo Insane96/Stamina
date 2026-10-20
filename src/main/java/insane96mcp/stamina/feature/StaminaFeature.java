@@ -1,9 +1,9 @@
 package insane96mcp.stamina.feature;
 
-import insane96mcp.insanelib.core.ModNBTData;
 import insane96mcp.insanelib.core.feature.Feature;
 import insane96mcp.insanelib.core.feature.LoadFeature;
 import insane96mcp.insanelib.core.feature.config.Config;
+import insane96mcp.insanelib.module.base.InCombat;
 import insane96mcp.insanelib.util.MCUtils;
 import insane96mcp.stamina.Stamina;
 import insane96mcp.stamina.effect.VigourEffect;
@@ -28,7 +28,6 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.common.NeoForgeMod;
 import net.neoforged.neoforge.event.entity.EntityAttributeModificationEvent;
-import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
@@ -49,8 +48,6 @@ public class StaminaFeature extends Feature {
 
     public static final ResourceLocation STAMINA = Stamina.location("stamina");
     public static final ResourceLocation STAMINA_LOCKED = Stamina.location("stamina_locked");
-    public static final ResourceLocation LAST_HIT = Stamina.location("last_hit");
-    public static final ResourceLocation LAST_HURT = Stamina.location("last_hurt");
     public static String OVERLAY = "stamina_overlay";
 
     public static final DeferredHolder<Attribute, Attribute> BONUS_STAMINA_ATTRIBUTE = SRegistries.ATTRIBUTES.register("bonus_stamina", () -> (new RangedAttribute("attribute.name.bonus_stamina", 0, -Double.MAX_VALUE, Double.MAX_VALUE)).setSyncable(true));
@@ -83,8 +80,10 @@ public class StaminaFeature extends Feature {
     public static Double consumption$conduitSwimmingModifier = 0.85d;
     @Config(min = 0, description = "How much stamina the player consumes each tick when mining. If stamina is locked, mining speed is halved")
     public static Double consumption$mine = 0d;
-    @Config(min = 0d, description = "Multiply stamina consumption by this value when the player is out of combat. Out of combat = not attacked or hurt in the last 15 seconds")
+    @Config(min = 0d, description = "Multiply stamina consumption by this value when the player is out of combat. Out of combat = not attacked or hurt in the last 'In combat time' seconds")
     public static Double consumption$outOfCombatMultiplier = 0.8d;
+    @Config(min = 0d, description = "Seconds after attacking or being hurt in which the player is considered in combat")
+    public static Double consumption$inCombatTime = 15d;
 
     @Config(min = 0d)
     public static Double regen$perTick = 2d;
@@ -250,22 +249,6 @@ public class StaminaFeature extends Feature {
         return Feature.isEnabled(StaminaFeature.class) && tickMined.containsKey(player) && player.tickCount < tickMined.get(player) + 8;
     }
 
-    public static boolean isInCombat(ServerPlayer player) {
-        return player.level().getGameTime() - ModNBTData.get(player, LAST_HIT, Integer.class) < 300
-                || player.level().getGameTime() - ModNBTData.get(player, LAST_HURT, Integer.class) < 300;
-    }
-
-    @SubscribeEvent
-    public void onAttack(LivingDamageEvent.Post event) {
-        if (consumption$outOfCombatMultiplier == 1f)
-            return;
-
-        if (event.getEntity() instanceof ServerPlayer serverPlayer)
-            ModNBTData.put(serverPlayer, LAST_HURT, serverPlayer.level().getGameTime());
-        else if (event.getSource().getEntity() instanceof ServerPlayer serverPlayer)
-            ModNBTData.put(serverPlayer, LAST_HIT, serverPlayer.level().getGameTime());
-    }
-
     @SubscribeEvent
     public void onDeath(LivingDeathEvent event) {
         if (!this.isEnabled()
@@ -301,7 +284,7 @@ public class StaminaFeature extends Feature {
         }
         staminaToConsume += (staminaToConsume * percIncrease);
         staminaToConsume = SEventFactory.onStaminaConsumed(player, staminaToConsume);
-        if (!isInCombat(player))
+        if (!InCombat.isInCombat(player, consumption$inCombatTime))
             staminaToConsume *= consumption$outOfCombatMultiplier.floatValue();
         return staminaToConsume;
     }

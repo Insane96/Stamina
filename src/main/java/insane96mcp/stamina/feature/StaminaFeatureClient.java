@@ -80,10 +80,13 @@ public class StaminaFeatureClient {
 
         int right = mc.getWindow().getGuiScaledWidth() / 2 - 91;
         int top = mc.getWindow().getGuiScaledHeight() - leftHeight;
-        float staminaPerHalfHeart = StaminaHandler.getMaxStamina(player) / staminaHealth;
+        float maxStamina = StaminaHandler.getMaxStamina(player);
+        if (maxStamina <= 0 || staminaHealth <= 0)
+            return;
+        float staminaPerHalfHeart = maxStamina / staminaHealth;
         if (shouldRenderOnOneRow)
-            staminaPerHalfHeart = StaminaHandler.getMaxStamina(player) / Math.min(staminaHealth, 20f);
-        int halfHeartsMaxStamina = Mth.ceil(StaminaHandler.getMaxStamina(player) / staminaPerHalfHeart);
+            staminaPerHalfHeart = maxStamina / Math.min(staminaHealth, 20f);
+        int halfHeartsMaxStamina = Mth.ceil(maxStamina / staminaPerHalfHeart);
         int halfHeartsStamina = Mth.ceil(StaminaHandler.getStamina(player) / staminaPerHalfHeart);
         int height = 9;
         int regen = -1;
