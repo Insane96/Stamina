@@ -25,14 +25,10 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.common.NeoForgeMod;
 import net.neoforged.neoforge.event.entity.EntityAttributeModificationEvent;
-import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
-
-import java.util.Map;
-import java.util.WeakHashMap;
 
 @LoadFeature(module = Stamina.RESOURCE_PREFIX + "main", canBeDisabled = false, description = "Stamina to let the player run and do stuff.")
 public class StaminaFeature extends Feature {
@@ -75,8 +71,6 @@ public class StaminaFeature extends Feature {
     public static Double consumption$swim = 0.5d;
     @Config(min = 0, description = "Multiplier for stamina consumed when the player is swimming with the conduit power effect.")
     public static Double consumption$conduitSwimmingModifier = 0.85d;
-    @Config(min = 0, description = "How much stamina the player consumes each tick when mining. If stamina is locked, mining speed is halved")
-    public static Double consumption$mine = 0d;
     @Config(min = 0d, description = "Multiply stamina consumption by this value when the player is out of combat. Out of combat = not attacked or hurt in the last 'In combat time' seconds")
     public static Double consumption$outOfCombatMultiplier = 0.8d;
     @Config(min = 0d, description = "Seconds after attacking or being hurt in which the player is considered in combat")
@@ -161,7 +155,7 @@ public class StaminaFeature extends Feature {
             }
         }
         //Regen
-        else if (!isMining(player) && stamina != maxStamina && maxStaminaPercentage > lock$belowHealthRatio && maxHealth > lock$belowMaxHealth) {
+        else if (stamina != maxStamina && maxStaminaPercentage > lock$belowHealthRatio && maxHealth > lock$belowMaxHealth) {
             float staminaToRecover = regen$perTick.floatValue();
             //Slower regeneration if stamina is locked
             if (isStaminaLocked)
@@ -200,7 +194,7 @@ public class StaminaFeature extends Feature {
         }
         slowdown(player, maxStaminaPercentage, staminaPercentage, stamina, isStaminaLocked);
 
-        if (isMining(player) || shouldSync)
+        if (shouldSync)
             StaminaSync.sync(player);
     }
 
@@ -236,36 +230,6 @@ public class StaminaFeature extends Feature {
         }
         else if (modifier == null || modifier.amount() != amount)
             attributeInstance.addOrUpdateTransientModifier(new AttributeModifier(id, amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
-    }
-
-    private static final Map<ServerPlayer, Integer> tickMined = new WeakHashMap<>();
-
-    @SubscribeEvent
-    public void onBreakSpeed(PlayerEvent.BreakSpeed event) {
-        if (consumption$mine == 0)
-            return;
-        Player player = event.getEntity();
-
-        if (StaminaHandler.isStaminaLocked(player)) {
-            event.setNewSpeed(event.getNewSpeed() * 0.5f);
-        }
-        else if (player instanceof ServerPlayer serverPlayer && StaminaHandler.getStamina(player) > 0) {
-            StaminaHandler.consumeStamina(player, consumption$mine.floatValue());
-            tickMined.put(serverPlayer, player.tickCount);
-        }
-    }
-
-    public static boolean isMining(ServerPlayer player) {
-        return Feature.isEnabled(StaminaFeature.class) && tickMined.containsKey(player) && player.tickCount < tickMined.get(player) + 8;
-    }
-
-    @SubscribeEvent
-    public void onDeath(LivingDeathEvent event) {
-        if (!this.isEnabled()
-                || !(event.getEntity() instanceof ServerPlayer player))
-            return;
-
-        tickMined.remove(player);
     }
 
     @SubscribeEvent
