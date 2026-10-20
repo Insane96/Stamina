@@ -165,10 +165,10 @@ public class StaminaFeature extends Feature {
             staminaToConsume = SEventFactory.onStaminaConsumed(player, staminaToConsume);
             if (!isInCombat(player))
                 staminaToConsume *= consumption$outOfCombatMultiplier.floatValue();
-            if (staminaToConsume == 0)
-                return;
-            StaminaHandler.consumeStamina(player, staminaToConsume);
-            shouldSync = true;
+            if (staminaToConsume != 0) {
+                StaminaHandler.consumeStamina(player, staminaToConsume);
+                shouldSync = true;
+            }
         }
         //Regen
         else if (!isMining(player) && stamina != maxStamina && maxStaminaPercentage > lock$belowHealthRatio && maxHealth > lock$belowMaxHealth) {
@@ -189,14 +189,14 @@ public class StaminaFeature extends Feature {
             staminaToRecover *= (float) (1f - (armor * StaminaFeature.regen$reductionPerArmorPoint));
 
             staminaToRecover = SEventFactory.onStaminaRegenerated(player, staminaToRecover);
-            if (staminaToRecover == 0)
-                return;
-            stamina = StaminaHandler.regenStamina(player, staminaToRecover);
-            if (isStaminaLocked && staminaPercentage >= lock$unlockAtHealthRatio) {
-                StaminaHandler.unlockSprinting(player);
-                isStaminaLocked = false;
+            if (staminaToRecover != 0) {
+                stamina = StaminaHandler.regenStamina(player, staminaToRecover);
+                if (isStaminaLocked && staminaPercentage >= lock$unlockAtHealthRatio) {
+                    StaminaHandler.unlockSprinting(player);
+                    isStaminaLocked = false;
+                }
+                shouldSync = true;
             }
-            shouldSync = true;
         }
         else if (!isStaminaLocked && (maxStaminaPercentage <= lock$belowHealthRatio || maxHealth <= lock$belowMaxHealth)) {
             StaminaHandler.setStamina(player, 0);

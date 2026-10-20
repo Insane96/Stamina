@@ -4,6 +4,7 @@
   * The old `stamina-common.toml` is no longer read: if you customized it, copy your values to `stamina-server.toml` manually
 * Stamina is now required on both client and server: clients without the mod can no longer join servers with it, and clients with the mod can no longer join servers without it (this fixes a crash when joining a server without Stamina)
 * Fixed a crash if Vigour or Curse of Weariness are removed by a datapack
+* Fixed sprint/locked slowdown not being updated (and stamina not being synced) on ticks where stamina consumed or regenerated was 0 (e.g. set to 0 by config or by another mod through `StaminaEvent`)
 * Requires InsaneLib 2.4.34.0 or newer
 
 # 2.0.0.4
