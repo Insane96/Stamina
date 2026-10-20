@@ -17,7 +17,6 @@ import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.*;
 import net.minecraft.world.entity.player.Player;
@@ -51,9 +50,9 @@ public class StaminaFeature extends Feature {
     public static Double stamina$bonusPercentagePerLevelOfVigourEnchantment = 0.20d;
     @Config(min = 0, description = "Percentage of max stamina removed per level of Curse of Weariness")
     public static Double stamina$reductionPercentagePerLevelOfCurseOfWeariness = 0.40d;
-    @Config(min = 0)
+    @Config(min = 0, description = "Max stamina added per level of the Vigour effect")
     public static Integer stamina$bonusPerLevelOfVigourEffect = 40;
-    @Config(min = 0)
+    @Config(min = 0, description = "Percentage of max stamina removed per armor point")
     public static Double stamina$percentageReductionPerArmorPoint = 0.025d;
 
     @Config(description = "If Rune Enchanting is installed, whether chestplate-only runes granting Vigour/Curse of Weariness are enabled.")
@@ -76,24 +75,24 @@ public class StaminaFeature extends Feature {
     @Config(min = 0d, description = "Seconds after attacking or being hurt in which the player is considered in combat")
     public static Double consumption$inCombatTime = 15d;
 
-    @Config(min = 0d)
+    @Config(min = 0d, description = "How much stamina the player regenerates each tick when not sprinting")
     public static Double regen$perTick = 2d;
     @Config(min = 0d, description = "Multiplier for the regen per tick when stamina is locked")
     public static Double regen$modifierWhenLocked = 0.6d;
     @Config(min = 0, description = "Multiplier for the regen per tick when player's in water")
     public static Double regen$modifierWhenInWater = 1d;
-    @Config(min = 0, description = "'Modified when in water' is applied only when the player is not on the ground")
+    @Config(description = "'Modifier when in water' is applied only when the player is not on the ground")
     public static Boolean regen$modifierWhenInWaterWhenOffGround = true;
-    @Config(min = 0, description = "Percentage reduction per armor point")
+    @Config(min = 0, description = "Percentage of stamina regen removed per armor point")
     public static Double regen$reductionPerArmorPoint = 0.025d;
 
-    @Config(min = 0, description = "When max health is equal or less than this, stamina will be locked. With locked stamina, the player can't sprint")
+    @Config(min = 0, description = "When max health is equal or less than this, stamina will be locked and set to 0, and won't regenerate. With locked stamina, the player can't sprint")
     public static Double lock$belowMaxHealth = 4d;
-    @Config(min = 0, max = 1d, description = "When max stamina goes below this percentage, stamina will be locked. With locked stamina, the player can't sprint")
+    @Config(min = 0, max = 1d, description = "When health goes equal or below this percentage of max health, stamina will be locked and set to 0, and won't regenerate. With locked stamina, the player can't sprint. Has no effect if 'Bound to max health' is enabled")
     public static Double lock$belowHealthRatio = 0.20d;
-    @Config(min = 0, max = 1d, description = "At which health percentage will stamina be unlocked")
-    public static Double lock$unlockAtHealthRatio = 0.4d;
-    @Config(min = 0, description = "If this > 0, the player will still be able to sprint when stamina is locked, at the cost of a great amount of hunger. Stamina consumed will be applied to exhaustion at this rate. By default consumed 1 hunger/saturation per second of sprinting")
+    @Config(min = 0, max = 1d, description = "When stamina is locked, it gets unlocked once stamina is regenerated up to this percentage of max stamina")
+    public static Double lock$unlockAtStaminaRatio = 0.4d;
+    @Config(min = 0, description = "If this > 0, the player will still be able to sprint when stamina is locked, at the cost of a great amount of hunger. Stamina consumed while locked is applied as exhaustion multiplied by this value. E.g. 0.2 consumes about 1 hunger/saturation per second of sprinting")
     public static Double lock$consumeHungerRatio = 0d;
 
     @Config(min = 0, max = 1, description = "Below this percentage stamina, sprinting will be less effective.")
@@ -104,7 +103,7 @@ public class StaminaFeature extends Feature {
     public static Double slowdown$sprinting$amount = 0.15;
     @Config(description = "If stamina is locked, player will be slowed down.")
     public static Boolean slowdown$whenLocked$enabled = true;
-    @Config(min = 0, max = 1)
+    @Config(min = 0, max = 1, description = "Slowdown walking and swimming by this amount when stamina is locked")
     public static Double slowdown$whenLocked$amount = 0.1;
 
     @Config(description = "Disable sprinting altogether")
@@ -113,11 +112,8 @@ public class StaminaFeature extends Feature {
     public static Boolean disable$swimming = false;
 
     public static void addAttribute(EntityAttributeModificationEvent event) {
-        for (EntityType<? extends LivingEntity> entityType : event.getTypes()) {
-            if (event.has(entityType, BONUS_STAMINA_ATTRIBUTE))
-                continue;
-            event.add(entityType, BONUS_STAMINA_ATTRIBUTE);
-        }
+        if (!event.has(EntityType.PLAYER, BONUS_STAMINA_ATTRIBUTE))
+            event.add(EntityType.PLAYER, BONUS_STAMINA_ATTRIBUTE);
     }
 
     @SubscribeEvent
@@ -187,18 +183,18 @@ public class StaminaFeature extends Feature {
         //Unlock (checked outside regen, so stamina already full, e.g. set by a command, unlocks too)
         if (isStaminaLocked
                 && maxStaminaPercentage > lock$belowHealthRatio && maxHealth > lock$belowMaxHealth
-                && maxStamina > 0 && StaminaHandler.getStamina(player) / maxStamina >= lock$unlockAtHealthRatio) {
+                && maxStamina > 0 && StaminaHandler.getStamina(player) / maxStamina >= lock$unlockAtStaminaRatio) {
             StaminaHandler.unlockSprinting(player);
             isStaminaLocked = false;
             shouldSync = true;
         }
-        slowdown(player, maxStaminaPercentage, staminaPercentage, stamina, isStaminaLocked);
+        slowdown(player, staminaPercentage, stamina, isStaminaLocked);
 
         if (shouldSync)
             StaminaSync.sync(player);
     }
 
-    public static void slowdown(Player player, float maxStaminaPercentage, float staminaPercentage, float stamina, boolean isLocked) {
+    public static void slowdown(Player player, float staminaPercentage, float stamina, boolean isLocked) {
         slowdownLocked(player, isLocked);
         slowdownSprinting(player, staminaPercentage, stamina);
     }

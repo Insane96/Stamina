@@ -18,5 +18,11 @@
 
     "attribute.name.bonus_stamina": "Stamina Bonus",
 
-    "commands.insanestamina.get": "Stamina di %s: %.1f"
+    "commands.insanestamina.get": "Stamina di %s: %s",
+    "commands.insanestamina.set.success.single": "Stamina di %s impostata a %s",
+    "commands.insanestamina.set.success.multiple": "Stamina di %s giocatori impostata a %s",
+    "commands.insanestamina.regen.success.single": "Rigenerati %2$s di stamina a %1$s",
+    "commands.insanestamina.regen.success.multiple": "Rigenerati %2$s di stamina a %1$s giocatori",
+    "commands.insanestamina.consume.success.single": "Consumati %2$s di stamina a %1$s",
+    "commands.insanestamina.consume.success.multiple": "Consumati %2$s di stamina a %1$s giocatori"
 }

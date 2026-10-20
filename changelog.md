@@ -16,6 +16,11 @@
 * Slowdown modifiers are now changed only when needed instead of every tick, so the server no longer sends an attributes update every tick for slowed down players
 * Removed stamina consumption when mining ("Mine" config option, disabled by default) and the halved mining speed when stamina is locked
 * Mobs Properties Randomness: the `stamina:stamina` condition (non flat) now uses the current max stamina, like `stamina:set` and `stamina:add`, instead of the max stamina at full health
+* Config: "Unlock at health ratio" is now "Unlock at stamina ratio", as it's the stamina percentage that unlocks stamina, not health
+* Config: fixed and added missing descriptions
+* `/insanestamina set|regen|consume` now give feedback in chat and return the number of affected players
+* Fixed `/insanestamina get` showing the raw `%.1f` in Italian; the stamina is now shown with one decimal
+* The Bonus Stamina attribute is now only added to players instead of every entity
 * Fixed stamina staying locked when full (e.g. after setting it with `/insanestamina set`)
 * Fixed sprint/locked slowdown not being updated (and stamina not being synced) on ticks where stamina consumed or regenerated was 0 (e.g. set to 0 by config or by another mod through `StaminaEvent`)
 * Requires InsaneLib 2.4.34.0 or newer
