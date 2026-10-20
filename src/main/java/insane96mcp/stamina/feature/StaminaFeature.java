@@ -181,10 +181,6 @@ public class StaminaFeature extends Feature {
             staminaToRecover = SEventFactory.onStaminaRegenerated(player, staminaToRecover);
             if (staminaToRecover != 0) {
                 stamina = StaminaHandler.regenStamina(player, staminaToRecover);
-                if (isStaminaLocked && staminaPercentage >= lock$unlockAtHealthRatio) {
-                    StaminaHandler.unlockSprinting(player);
-                    isStaminaLocked = false;
-                }
                 shouldSync = true;
             }
         }
@@ -192,6 +188,14 @@ public class StaminaFeature extends Feature {
             StaminaHandler.setStamina(player, 0);
             StaminaHandler.lockSprinting(player);
             isStaminaLocked = true;
+            shouldSync = true;
+        }
+        //Unlock (checked outside regen, so stamina already full, e.g. set by a command, unlocks too)
+        if (isStaminaLocked
+                && maxStaminaPercentage > lock$belowHealthRatio && maxHealth > lock$belowMaxHealth
+                && maxStamina > 0 && StaminaHandler.getStamina(player) / maxStamina >= lock$unlockAtHealthRatio) {
+            StaminaHandler.unlockSprinting(player);
+            isStaminaLocked = false;
             shouldSync = true;
         }
         slowdown(player, maxStaminaPercentage, staminaPercentage, stamina, isStaminaLocked);
