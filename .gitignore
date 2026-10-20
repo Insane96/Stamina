@@ -39,3 +39,6 @@ run-server/
 **/src/generated/**/.cache/
 repo/
 !**/src/**/repo/
+
+# Claude reports
+report_*.md
