@@ -13,6 +13,7 @@
 * "In combat" is now handled by InsaneLib's In Combat feature
   * Fixed players attacking other players not being considered in combat
   * Added "In combat time" config option (default 15 seconds) to set for how long after attacking or being hurt the player is considered in combat
+* Slowdown modifiers are now changed only when needed instead of every tick, so the server no longer sends an attributes update every tick for slowed down players
 * Fixed sprint/locked slowdown not being updated (and stamina not being synced) on ticks where stamina consumed or regenerated was 0 (e.g. set to 0 by config or by another mod through `StaminaEvent`)
 * Requires InsaneLib 2.4.34.0 or newer
 

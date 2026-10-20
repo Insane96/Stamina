@@ -4,12 +4,12 @@ import insane96mcp.insanelib.core.feature.Feature;
 import insane96mcp.insanelib.core.feature.LoadFeature;
 import insane96mcp.insanelib.core.feature.config.Config;
 import insane96mcp.insanelib.module.base.InCombat;
-import insane96mcp.insanelib.util.MCUtils;
 import insane96mcp.stamina.Stamina;
 import insane96mcp.stamina.effect.VigourEffect;
 import insane96mcp.stamina.event.SEventFactory;
 import insane96mcp.stamina.network.StaminaSync;
 import insane96mcp.stamina.setup.SRegistries;
+import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
@@ -19,10 +19,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
-import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.attributes.RangedAttribute;
+import net.minecraft.world.entity.ai.attributes.*;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
@@ -209,23 +206,32 @@ public class StaminaFeature extends Feature {
     }
 
     private static void slowdownLocked(Player player, boolean isLocked) {
-        MCUtils.removeModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_ID);
-        MCUtils.removeModifier(player, NeoForgeMod.SWIM_SPEED, LOCK_SLOWDOWN_ID);
-        if (!isLocked
-                || !slowdown$whenLocked$enabled)
-            return;
-        MCUtils.applyModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_ID, -slowdown$whenLocked$amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, false);
-        MCUtils.applyModifier(player, NeoForgeMod.SWIM_SPEED, LOCK_SLOWDOWN_ID, -slowdown$whenLocked$amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, false);
+        boolean apply = isLocked && slowdown$whenLocked$enabled;
+        setSlowdownModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_ID, -slowdown$whenLocked$amount, apply);
+        setSlowdownModifier(player, NeoForgeMod.SWIM_SPEED, LOCK_SLOWDOWN_ID, -slowdown$whenLocked$amount, apply);
     }
 
     private static void slowdownSprinting(Player player, float staminaPercentage, float stamina) {
-        MCUtils.removeModifier(player, Attributes.MOVEMENT_SPEED, SPRINT_SLOWDOWN_ID);
-        MCUtils.removeModifier(player, NeoForgeMod.SWIM_SPEED, SPRINT_SLOWDOWN_ID);
-        if (!player.isSprinting()
-                || stamina >= slowdown$sprinting$thresholdFlat && staminaPercentage >= slowdown$sprinting$threshold)
+        boolean apply = player.isSprinting()
+                && (stamina < slowdown$sprinting$thresholdFlat || staminaPercentage < slowdown$sprinting$threshold);
+        setSlowdownModifier(player, Attributes.MOVEMENT_SPEED, SPRINT_SLOWDOWN_ID, -slowdown$sprinting$amount, apply);
+        setSlowdownModifier(player, NeoForgeMod.SWIM_SPEED, SPRINT_SLOWDOWN_ID, -slowdown$sprinting$amount, apply);
+    }
+
+    /**
+     * Adds, updates or removes the modifier only when it actually changes, as each change marks the attribute dirty and gets it synced to the client
+     */
+    private static void setSlowdownModifier(Player player, Holder<Attribute> attribute, ResourceLocation id, double amount, boolean apply) {
+        AttributeInstance attributeInstance = player.getAttribute(attribute);
+        if (attributeInstance == null)
             return;
-        MCUtils.applyModifier(player, Attributes.MOVEMENT_SPEED, SPRINT_SLOWDOWN_ID, -slowdown$sprinting$amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, false);
-        MCUtils.applyModifier(player, NeoForgeMod.SWIM_SPEED, SPRINT_SLOWDOWN_ID, -slowdown$sprinting$amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, false);
+        AttributeModifier modifier = attributeInstance.getModifier(id);
+        if (!apply) {
+            if (modifier != null)
+                attributeInstance.removeModifier(id);
+        }
+        else if (modifier == null || modifier.amount() != amount)
+            attributeInstance.addOrUpdateTransientModifier(new AttributeModifier(id, amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
     }
 
     private static final Map<ServerPlayer, Integer> tickMined = new WeakHashMap<>();
