@@ -119,9 +119,13 @@ public class StaminaFeature extends Feature {
     @SubscribeEvent
     public void onPlayerTick(PlayerTickEvent.Post event) {
         if (!(event.getEntity() instanceof ServerPlayer player)
-                || player.isDeadOrDying()
-                || (disable$sprinting && disable$swimming))
+                || player.isDeadOrDying())
             return;
+        if (disable$sprinting && disable$swimming) {
+            //Sprinting and swimming might have been disabled while the player was slowed down
+            removeSlowdowns(player);
+            return;
+        }
 
         boolean shouldSync = false;
 
@@ -137,6 +141,14 @@ public class StaminaFeature extends Feature {
         //Trigger sync for newly spawned players
         if (player.tickCount == 1)
             shouldSync = true;
+        //Lock when health is too low (checked before consume, so it also locks while sprinting)
+        if (!isStaminaLocked && (maxStaminaPercentage <= lock$belowHealthRatio || maxHealth <= lock$belowMaxHealth)) {
+            stamina = StaminaHandler.setStamina(player, 0);
+            staminaPercentage = 0f;
+            StaminaHandler.lockSprinting(player);
+            isStaminaLocked = true;
+            shouldSync = true;
+        }
         //Consume
         if (player.isSprinting() && player.getVehicle() == null && !player.isCreative() && !player.isSpectator()) {
             float staminaToConsume = consumption$sprint.floatValue();
@@ -174,12 +186,6 @@ public class StaminaFeature extends Feature {
                 shouldSync = true;
             }
         }
-        else if (!isStaminaLocked && (maxStaminaPercentage <= lock$belowHealthRatio || maxHealth <= lock$belowMaxHealth)) {
-            StaminaHandler.setStamina(player, 0);
-            StaminaHandler.lockSprinting(player);
-            isStaminaLocked = true;
-            shouldSync = true;
-        }
         //Unlock (checked outside regen, so stamina already full, e.g. set by a command, unlocks too)
         if (isStaminaLocked
                 && maxStaminaPercentage > lock$belowHealthRatio && maxHealth > lock$belowMaxHealth
@@ -210,6 +216,13 @@ public class StaminaFeature extends Feature {
                 && (stamina < slowdown$sprinting$thresholdFlat || staminaPercentage < slowdown$sprinting$threshold);
         setSlowdownModifier(player, Attributes.MOVEMENT_SPEED, SPRINT_SLOWDOWN_ID, -slowdown$sprinting$amount, apply);
         setSlowdownModifier(player, NeoForgeMod.SWIM_SPEED, SPRINT_SLOWDOWN_ID, -slowdown$sprinting$amount, apply);
+    }
+
+    private static void removeSlowdowns(Player player) {
+        setSlowdownModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_ID, 0, false);
+        setSlowdownModifier(player, NeoForgeMod.SWIM_SPEED, LOCK_SLOWDOWN_ID, 0, false);
+        setSlowdownModifier(player, Attributes.MOVEMENT_SPEED, SPRINT_SLOWDOWN_ID, 0, false);
+        setSlowdownModifier(player, NeoForgeMod.SWIM_SPEED, SPRINT_SLOWDOWN_ID, 0, false);
     }
 
     /**

@@ -21,6 +21,8 @@
 * `/insanestamina set|regen|consume` now give feedback in chat and return the number of affected players
 * Fixed `/insanestamina get` showing the raw `%.1f` in Italian; the stamina is now shown with one decimal
 * The Bonus Stamina attribute is now only added to players instead of every entity
+* Fixed stamina not being locked when health dropped below the threshold while sprinting
+* Fixed slowdowns staying applied if both sprinting and swimming are disabled while the server is running
 * Fixed stamina staying locked when full (e.g. after setting it with `/insanestamina set`)
 * Fixed sprint/locked slowdown not being updated (and stamina not being synced) on ticks where stamina consumed or regenerated was 0 (e.g. set to 0 by config or by another mod through `StaminaEvent`)
 * Requires InsaneLib 2.4.34.0 or newer
