@@ -154,17 +154,9 @@ public class StaminaFeature extends Feature {
             float staminaToConsume = consumption$sprint.floatValue();
             if (player.getPose() == Pose.SWIMMING)
                 staminaToConsume = consumption$swim.floatValue();
-            float percIncrease = 0f;
-            for (MobEffectInstance instance : player.getActiveEffects()) {
-                if (instance.getEffect().value() instanceof IStaminaModifier staminaModifier)
-                    percIncrease += staminaModifier.consumedStaminaModifier(instance.getAmplifier());
-            }
-            staminaToConsume += (staminaToConsume * percIncrease);
             if (player.getPose() == Pose.SWIMMING && player.hasEffect(MobEffects.CONDUIT_POWER))
                 staminaToConsume *= consumption$conduitSwimmingModifier.floatValue();
-            staminaToConsume = SEventFactory.onStaminaConsumed(player, staminaToConsume);
-            if (!isInCombat(player))
-                staminaToConsume *= consumption$outOfCombatMultiplier.floatValue();
+            staminaToConsume = getStaminaToConsume(player, staminaToConsume);
             if (staminaToConsume != 0) {
                 StaminaHandler.consumeStamina(player, staminaToConsume);
                 shouldSync = true;
@@ -285,17 +277,31 @@ public class StaminaFeature extends Feature {
     public void onPlayerJump(final LivingEvent.LivingJumpEvent event) {
         if (!this.isEnabled()
                 || consumption$jump == 0
-                || !(event.getEntity() instanceof ServerPlayer player))
+                || (disable$sprinting && disable$swimming)
+                || !(event.getEntity() instanceof ServerPlayer player)
+                || player.isCreative()
+                || player.isSpectator())
             return;
 
-        float consumed = consumption$jump;
+        float consumed = getStaminaToConsume(player, consumption$jump);
+        if (consumed != 0)
+            StaminaHandler.consumeStamina(player, consumed);
+    }
+
+    /**
+     * Applies the stamina modifiers of the active effects, {@link insane96mcp.stamina.event.StaminaEvent.Consumed} and the out of combat multiplier to the stamina consumed
+     */
+    private static float getStaminaToConsume(ServerPlayer player, float staminaToConsume) {
         float percIncrease = 0f;
         for (MobEffectInstance instance : player.getActiveEffects()) {
             if (instance.getEffect().value() instanceof IStaminaModifier staminaModifier)
                 percIncrease += staminaModifier.consumedStaminaModifier(instance.getAmplifier());
         }
-        consumed += (consumed * percIncrease);
-        StaminaHandler.consumeStamina(player, consumed);
+        staminaToConsume += (staminaToConsume * percIncrease);
+        staminaToConsume = SEventFactory.onStaminaConsumed(player, staminaToConsume);
+        if (!isInCombat(player))
+            staminaToConsume *= consumption$outOfCombatMultiplier.floatValue();
+        return staminaToConsume;
     }
 
     @SubscribeEvent
