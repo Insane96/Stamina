@@ -7,6 +7,7 @@
 * Jumping no longer consumes stamina in creative and spectator mode, or when both sprinting and swimming are disabled
 * Stamina consumed by jumping is now affected by the out of combat multiplier, like sprinting
   * `StaminaEvent.Consumed` is now also fired for jumps
+* Fixed the stamina overlay not shaking like the hearts at low health with odd max health, with "Bound to max health" enabled, or right after max health decreased
 * Fixed sprint/locked slowdown not being updated (and stamina not being synced) on ticks where stamina consumed or regenerated was 0 (e.g. set to 0 by config or by another mod through `StaminaEvent`)
 * Requires InsaneLib 2.4.34.0 or newer
 

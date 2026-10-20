@@ -50,14 +50,18 @@ public class StaminaFeatureClient {
         boolean shouldRenderOnOneRow = ModList.get().isLoaded("mantle");
 
         int health = Mth.ceil(player.getHealth());
+        // Half hearts the stamina is spread over
+        int staminaHealth = health;
         if (StaminaFeature.stamina$boundToMaxHealth)
-            health = Mth.ceil(player.getMaxHealth());
+            staminaHealth = Mth.ceil(player.getMaxHealth());
 
+        // Same as vanilla Gui#renderHealthLevel, so rows, regen and shake match the hearts
         AttributeInstance attrMaxHealth = player.getAttribute(Attributes.MAX_HEALTH);
-        float healthMax = Math.max((float) attrMaxHealth.getValue(), health);
-        int healthMaxI = Mth.ceil(healthMax);
+        float healthMax = Math.max((float) attrMaxHealth.getValue(), (float) Math.max(((GuiAccessor) gui).getDisplayHealth(), health));
+        int hearts = Mth.ceil(healthMax / 2f);
         int absorp = Mth.ceil(player.getAbsorptionAmount());
-        int halfAbsorp = Mth.ceil(player.getAbsorptionAmount() / 2);
+        int absorpHearts = Mth.ceil(absorp / 2f);
+        boolean lowHealth = health + absorp <= 4;
 
         int healthRows = Mth.ceil((healthMax + absorp) / 2.0F / 10.0F);
         int rowHeight = Math.max(10 - (healthRows - 2), 3);
@@ -76,9 +80,9 @@ public class StaminaFeatureClient {
 
         int right = mc.getWindow().getGuiScaledWidth() / 2 - 91;
         int top = mc.getWindow().getGuiScaledHeight() - leftHeight;
-        float staminaPerHalfHeart = StaminaHandler.getMaxStamina(player) / health;
+        float staminaPerHalfHeart = StaminaHandler.getMaxStamina(player) / staminaHealth;
         if (shouldRenderOnOneRow)
-            staminaPerHalfHeart = StaminaHandler.getMaxStamina(player) / Math.min(health, 20f);
+            staminaPerHalfHeart = StaminaHandler.getMaxStamina(player) / Math.min(staminaHealth, 20f);
         int halfHeartsMaxStamina = Mth.ceil(StaminaHandler.getMaxStamina(player) / staminaPerHalfHeart);
         int halfHeartsStamina = Mth.ceil(StaminaHandler.getStamina(player) / staminaPerHalfHeart);
         int height = 9;
@@ -90,48 +94,45 @@ public class StaminaFeatureClient {
         if (StaminaHandler.isStaminaLocked(player))
             texture = StaminaFeature.LOCKED_HEART_OVERLAY;
 
-        int oldJiggle = 0;
-
-        for (int a = 0; a < halfAbsorp; a++) {
-            ((GuiAccessor) gui).getRandom().nextInt(2);
+        // Vanilla draws the absorption hearts first, consuming the random for each of them when shaking
+        if (lowHealth) {
+            for (int a = 0; a < absorpHearts; a++)
+                ((GuiAccessor) gui).getRandom().nextInt(2);
         }
 
-        for (int hp = healthMaxI - 1; hp >= 0; hp--) {
+        for (int heart = hearts - 1; heart >= 0; heart--) {
             //Doesn't work with absorption ...
             int jiggle = 0;
-            if ((hp + 1) % 2 == 0) {
-                if (hp / 2 == regen)
-                    jiggle -= 2;
-                if (health + absorp <= 4)
-                    jiggle += ((GuiAccessor) gui).getRandom().nextInt(2);
-                oldJiggle = jiggle;
-            }
-            else
-                jiggle = oldJiggle;
-            if (hp >= halfHeartsMaxStamina || hp < halfHeartsStamina)
-                continue;
-            int v = (int) UV_STAMINA.y;
-            int width;
-            int u;
-            int r;
-            if (hp % 2 == 0) {
-                width = 4;
-                u = (int) UV_STAMINA.x + 1;
-                r = 1;
-            }
-            else {
-                width = 4;
-                u = (int) UV_STAMINA.x + 5;
-                r = 5;
-            }
+            if (lowHealth)
+                jiggle += ((GuiAccessor) gui).getRandom().nextInt(2);
+            if (heart == regen)
+                jiggle -= 2;
+            for (int hp = heart * 2 + 1; hp >= heart * 2; hp--) {
+                if (hp >= halfHeartsMaxStamina || hp < halfHeartsStamina)
+                    continue;
+                int v = (int) UV_STAMINA.y;
+                int width;
+                int u;
+                int r;
+                if (hp % 2 == 0) {
+                    width = 4;
+                    u = (int) UV_STAMINA.x + 1;
+                    r = 1;
+                }
+                else {
+                    width = 4;
+                    u = (int) UV_STAMINA.x + 5;
+                    r = 5;
+                }
 
-            int pY = top - (hp / 20 * rowHeight) + jiggle;
-            if (shouldRenderOnOneRow)
-                pY = top + jiggle;
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            guiGraphics.blit(texture, right + (hp / 2 * 8) + r - (hp / 20 * 80), pY, u, v, width, height, 9, 9);
-            RenderSystem.disableBlend();
+                int pY = top - (hp / 20 * rowHeight) + jiggle;
+                if (shouldRenderOnOneRow)
+                    pY = top + jiggle;
+                RenderSystem.enableBlend();
+                RenderSystem.defaultBlendFunc();
+                guiGraphics.blit(texture, right + (hp / 2 * 8) + r - (hp / 20 * 80), pY, u, v, width, height, 9, 9);
+                RenderSystem.disableBlend();
+            }
         }
         ClientUtils.resetRenderColor();
     }
