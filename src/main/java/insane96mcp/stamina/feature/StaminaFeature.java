@@ -133,6 +133,7 @@ public class StaminaFeature extends Feature {
     @SubscribeEvent
     public void onPlayerTick(PlayerTickEvent.Post event) {
         if (!(event.getEntity() instanceof ServerPlayer player)
+                || player.isDeadOrDying()
                 || (disable$sprinting && disable$swimming))
             return;
 
@@ -142,8 +143,9 @@ public class StaminaFeature extends Feature {
         float maxPossibleStamina = StaminaHandler.getMaxPossibleStamina(player);
         float maxStamina = StaminaHandler.getMaxStamina(player, maxPossibleStamina);
         float stamina = StaminaHandler.getStamina(player);
-        float maxStaminaPercentage = maxStamina / maxPossibleStamina;
-        float staminaPercentage = stamina / maxStamina;
+        // With no stamina at all (e.g. too much armor or Curse of Weariness) the percentages are 0, so stamina gets locked
+        float maxStaminaPercentage = maxPossibleStamina > 0 ? maxStamina / maxPossibleStamina : 0f;
+        float staminaPercentage = maxStamina > 0 ? stamina / maxStamina : 0f;
         boolean isStaminaLocked = StaminaHandler.isStaminaLocked(player);
 
         //Trigger sync for newly spawned players
@@ -178,7 +180,7 @@ public class StaminaFeature extends Feature {
             }
             staminaToRecover += (staminaToRecover * percIncrease);
             double armor = player.getAttributeValue(Attributes.ARMOR);
-            staminaToRecover *= (float) (1f - (armor * StaminaFeature.regen$reductionPerArmorPoint));
+            staminaToRecover *= (float) Math.max(0d, 1d - (armor * StaminaFeature.regen$reductionPerArmorPoint));
 
             staminaToRecover = SEventFactory.onStaminaRegenerated(player, staminaToRecover);
             if (staminaToRecover != 0) {
