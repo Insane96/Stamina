@@ -15,6 +15,7 @@
   * Added "In combat time" config option (default 15 seconds) to set for how long after attacking or being hurt the player is considered in combat
 * Slowdown modifiers are now changed only when needed instead of every tick, so the server no longer sends an attributes update every tick for slowed down players
 * Removed stamina consumption when mining ("Mine" config option, disabled by default) and the halved mining speed when stamina is locked
+* Mobs Properties Randomness: the `stamina:stamina` condition (non flat) now uses the current max stamina, like `stamina:set` and `stamina:add`, instead of the max stamina at full health
 * Fixed stamina staying locked when full (e.g. after setting it with `/insanestamina set`)
 * Fixed sprint/locked slowdown not being updated (and stamina not being synced) on ticks where stamina consumed or regenerated was 0 (e.g. set to 0 by config or by another mod through `StaminaEvent`)
 * Requires InsaneLib 2.4.34.0 or newer

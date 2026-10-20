@@ -28,8 +28,9 @@ public class SStaminaCondition extends MPRCondition {
         float stamina = StaminaHandler.getStamina(player);
         if (this.flat)
             return this.range.isBetween(player, stamina);
-        float maxPossibleStamina = StaminaHandler.getMaxPossibleStamina(player);
-        return this.range.isBetween(player, maxPossibleStamina > 0 ? stamina / maxPossibleStamina : 0f);
+        // Same max stamina as stamina:set and stamina:add, so the same percentage means the same amount
+        float maxStamina = StaminaHandler.getMaxStamina(player);
+        return this.range.isBetween(player, maxStamina > 0 ? stamina / maxStamina : 0f);
     }
 
     public static class Serializer implements JsonDeserializer<SStaminaCondition>, JsonSerializer<SStaminaCondition> {
