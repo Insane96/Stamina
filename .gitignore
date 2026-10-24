@@ -44,3 +44,6 @@ runs/
 run-data/
 run-server/
 .claude/
+
+# Claude reports
+report_*.md

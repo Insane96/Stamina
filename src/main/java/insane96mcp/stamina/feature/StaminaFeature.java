@@ -1,11 +1,10 @@
 package insane96mcp.stamina.feature;
 
 import com.mojang.serialization.MapCodec;
-import insane96mcp.insanelib.core.ModNBTData;
 import insane96mcp.insanelib.core.feature.Feature;
 import insane96mcp.insanelib.core.feature.LoadFeature;
 import insane96mcp.insanelib.core.feature.config.Config;
-import insane96mcp.insanelib.util.MCUtils;
+import insane96mcp.insanelib.module.base.InCombat;
 import insane96mcp.stamina.Stamina;
 import insane96mcp.stamina.effect.VigourEffect;
 import insane96mcp.stamina.enchantment.ConsumeStaminaEffect;
@@ -13,6 +12,7 @@ import insane96mcp.stamina.enchantment.HasStaminaCondition;
 import insane96mcp.stamina.event.SEventFactory;
 import insane96mcp.stamina.network.StaminaSync;
 import insane96mcp.stamina.setup.SRegistries;
+import net.minecraft.core.Holder;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
@@ -20,12 +20,8 @@ import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
-import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.attributes.RangedAttribute;
+import net.minecraft.world.entity.ai.attributes.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.enchantment.effects.EnchantmentEntityEffect;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
@@ -33,15 +29,10 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.common.NeoForgeMod;
 import net.neoforged.neoforge.event.entity.EntityAttributeModificationEvent;
-import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
-import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
-
-import java.util.Map;
-import java.util.WeakHashMap;
 
 @LoadFeature(module = Stamina.RESOURCE_PREFIX + "main", canBeDisabled = false, description = "Stamina to let the player run and do stuff.")
 public class StaminaFeature extends Feature {
@@ -56,8 +47,6 @@ public class StaminaFeature extends Feature {
 
     public static final Identifier STAMINA = Stamina.location("stamina");
     public static final Identifier STAMINA_LOCKED = Stamina.location("stamina_locked");
-    public static final Identifier LAST_HIT = Stamina.location("last_hit");
-    public static final Identifier LAST_HURT = Stamina.location("last_hurt");
     public static String OVERLAY = "stamina_overlay";
 
     public static final DeferredHolder<Attribute, Attribute> BONUS_STAMINA_ATTRIBUTE = SRegistries.ATTRIBUTES.register("bonus_stamina", () -> (new RangedAttribute("attribute.name.bonus_stamina", 0, -Double.MAX_VALUE, Double.MAX_VALUE)).setSyncable(true));
@@ -68,9 +57,9 @@ public class StaminaFeature extends Feature {
     public static Double stamina$bonusPercentagePerLevelOfVigourEnchantment = 0.20d;
     @Config(min = 0, description = "Percentage of max stamina removed per level of Curse of Weariness")
     public static Double stamina$reductionPercentagePerLevelOfCurseOfWeariness = 0.40d;
-    @Config(min = 0)
+    @Config(min = 0, description = "Max stamina added per level of the Vigour effect")
     public static Integer stamina$bonusPerLevelOfVigourEffect = 40;
-    @Config(min = 0)
+    @Config(min = 0, description = "Percentage of max stamina removed per armor point")
     public static Double stamina$percentageReductionPerArmorPoint = 0.025d;
 
     @Config(description = "If Rune Enchanting is installed, whether chestplate-only runes granting Vigour/Curse of Weariness are enabled.")
@@ -88,29 +77,29 @@ public class StaminaFeature extends Feature {
     public static Double consumption$swim = 0.5d;
     @Config(min = 0, description = "Multiplier for stamina consumed when the player is swimming with the conduit power effect.")
     public static Double consumption$conduitSwimmingModifier = 0.85d;
-    @Config(min = 0, description = "How much stamina the player consumes each tick when mining. If stamina is locked, mining speed is halved")
-    public static Double consumption$mine = 0d;
-    @Config(min = 0d, description = "Multiply stamina consumption by this value when the player is out of combat. Out of combat = not attacked or hurt in the last 15 seconds")
+    @Config(min = 0d, description = "Multiply stamina consumption by this value when the player is out of combat. Out of combat = not attacked or hurt in the last 'In combat time' seconds")
     public static Double consumption$outOfCombatMultiplier = 0.8d;
+    @Config(min = 0d, description = "Seconds after attacking or being hurt in which the player is considered in combat")
+    public static Double consumption$inCombatTime = 15d;
 
-    @Config(min = 0d)
+    @Config(min = 0d, description = "How much stamina the player regenerates each tick when not sprinting")
     public static Double regen$perTick = 2d;
     @Config(min = 0d, description = "Multiplier for the regen per tick when stamina is locked")
     public static Double regen$modifierWhenLocked = 0.6d;
     @Config(min = 0, description = "Multiplier for the regen per tick when player's in water")
     public static Double regen$modifierWhenInWater = 1d;
-    @Config(min = 0, description = "'Modified when in water' is applied only when the player is not on the ground")
+    @Config(description = "'Modifier when in water' is applied only when the player is not on the ground")
     public static Boolean regen$modifierWhenInWaterWhenOffGround = true;
-    @Config(min = 0, description = "Percentage reduction per armor point")
+    @Config(min = 0, description = "Percentage of stamina regen removed per armor point")
     public static Double regen$reductionPerArmorPoint = 0.025d;
 
-    @Config(min = 0, description = "When max health is equal or less than this, stamina will be locked. With locked stamina, the player can't sprint")
+    @Config(min = 0, description = "When max health is equal or less than this, stamina will be locked and set to 0, and won't regenerate. With locked stamina, the player can't sprint")
     public static Double lock$belowMaxHealth = 4d;
-    @Config(min = 0, max = 1d, description = "When max stamina goes below this percentage, stamina will be locked. With locked stamina, the player can't sprint")
+    @Config(min = 0, max = 1d, description = "When health goes equal or below this percentage of max health, stamina will be locked and set to 0, and won't regenerate. With locked stamina, the player can't sprint. Has no effect if 'Bound to max health' is enabled")
     public static Double lock$belowHealthRatio = 0.20d;
-    @Config(min = 0, max = 1d, description = "At which health percentage will stamina be unlocked")
-    public static Double lock$unlockAtHealthRatio = 0.4d;
-    @Config(min = 0, description = "If this > 0, the player will still be able to sprint when stamina is locked, at the cost of a great amount of hunger. Stamina consumed will be applied to exhaustion at this rate. By default consumed 1 hunger/saturation per second of sprinting")
+    @Config(min = 0, max = 1d, description = "When stamina is locked, it gets unlocked once stamina is regenerated up to this percentage of max stamina")
+    public static Double lock$unlockAtStaminaRatio = 0.4d;
+    @Config(min = 0, description = "If this > 0, the player will still be able to sprint when stamina is locked, at the cost of a great amount of hunger. Stamina consumed while locked is applied as exhaustion multiplied by this value. E.g. 0.2 consumes about 1 hunger/saturation per second of sprinting")
     public static Double lock$consumeHungerRatio = 0d;
 
     @Config(min = 0, max = 1, description = "Below this percentage stamina, sprinting will be less effective.")
@@ -121,7 +110,7 @@ public class StaminaFeature extends Feature {
     public static Double slowdown$sprinting$amount = 0.15;
     @Config(description = "If stamina is locked, player will be slowed down.")
     public static Boolean slowdown$whenLocked$enabled = true;
-    @Config(min = 0, max = 1)
+    @Config(min = 0, max = 1, description = "Slowdown walking and swimming by this amount when stamina is locked")
     public static Double slowdown$whenLocked$amount = 0.1;
 
     @Config(description = "Disable sprinting altogether")
@@ -130,18 +119,20 @@ public class StaminaFeature extends Feature {
     public static Boolean disable$swimming = false;
 
     public static void addAttribute(EntityAttributeModificationEvent event) {
-        for (EntityType<? extends LivingEntity> entityType : event.getTypes()) {
-            if (event.has(entityType, BONUS_STAMINA_ATTRIBUTE))
-                continue;
-            event.add(entityType, BONUS_STAMINA_ATTRIBUTE);
-        }
+        if (!event.has(EntityType.PLAYER, BONUS_STAMINA_ATTRIBUTE))
+            event.add(EntityType.PLAYER, BONUS_STAMINA_ATTRIBUTE);
     }
 
     @SubscribeEvent
     public void onPlayerTick(PlayerTickEvent.Post event) {
         if (!(event.getEntity() instanceof ServerPlayer player)
-                || (disable$sprinting && disable$swimming))
+                || player.isDeadOrDying())
             return;
+        if (disable$sprinting && disable$swimming) {
+            //Sprinting and swimming might have been disabled while the player was slowed down
+            removeSlowdowns(player);
+            return;
+        }
 
         boolean shouldSync = false;
 
@@ -149,36 +140,37 @@ public class StaminaFeature extends Feature {
         float maxPossibleStamina = StaminaHandler.getMaxPossibleStamina(player);
         float maxStamina = StaminaHandler.getMaxStamina(player, maxPossibleStamina);
         float stamina = StaminaHandler.getStamina(player);
-        float maxStaminaPercentage = maxStamina / maxPossibleStamina;
-        float staminaPercentage = stamina / maxStamina;
+        // With no stamina at all (e.g. too much armor or Curse of Weariness) the percentages are 0, so stamina gets locked
+        float maxStaminaPercentage = maxPossibleStamina > 0 ? maxStamina / maxPossibleStamina : 0f;
+        float staminaPercentage = maxStamina > 0 ? stamina / maxStamina : 0f;
         boolean isStaminaLocked = StaminaHandler.isStaminaLocked(player);
 
         //Trigger sync for newly spawned players
         if (player.tickCount == 1)
             shouldSync = true;
+        //Lock when health is too low (checked before consume, so it also locks while sprinting)
+        if (!isStaminaLocked && (maxStaminaPercentage <= lock$belowHealthRatio || maxHealth <= lock$belowMaxHealth)) {
+            stamina = StaminaHandler.setStamina(player, 0);
+            staminaPercentage = 0f;
+            StaminaHandler.lockSprinting(player);
+            isStaminaLocked = true;
+            shouldSync = true;
+        }
         //Consume
         if (player.isSprinting() && player.getVehicle() == null && !player.isCreative() && !player.isSpectator()) {
             float staminaToConsume = consumption$sprint.floatValue();
             if (player.getPose() == Pose.SWIMMING)
                 staminaToConsume = consumption$swim.floatValue();
-            float percIncrease = 0f;
-            for (MobEffectInstance instance : player.getActiveEffects()) {
-                if (instance.getEffect().value() instanceof IStaminaModifier staminaModifier)
-                    percIncrease += staminaModifier.consumedStaminaModifier(instance.getAmplifier());
-            }
-            staminaToConsume += (staminaToConsume * percIncrease);
             if (player.getPose() == Pose.SWIMMING && player.hasEffect(MobEffects.CONDUIT_POWER))
                 staminaToConsume *= consumption$conduitSwimmingModifier.floatValue();
-            staminaToConsume = SEventFactory.onStaminaConsumed(player, staminaToConsume);
-            if (!isInCombat(player))
-                staminaToConsume *= consumption$outOfCombatMultiplier.floatValue();
-            if (staminaToConsume == 0)
-                return;
-            StaminaHandler.consumeStamina(player, staminaToConsume);
-            shouldSync = true;
+            staminaToConsume = getStaminaToConsume(player, staminaToConsume);
+            if (staminaToConsume != 0) {
+                StaminaHandler.consumeStamina(player, staminaToConsume);
+                shouldSync = true;
+            }
         }
         //Regen
-        else if (!isMining(player) && stamina != maxStamina && maxStaminaPercentage > lock$belowHealthRatio && maxHealth > lock$belowMaxHealth) {
+        else if (stamina != maxStamina && maxStaminaPercentage > lock$belowHealthRatio && maxHealth > lock$belowMaxHealth) {
             float staminaToRecover = regen$perTick.floatValue();
             //Slower regeneration if stamina is locked
             if (isStaminaLocked)
@@ -193,116 +185,98 @@ public class StaminaFeature extends Feature {
             }
             staminaToRecover += (staminaToRecover * percIncrease);
             double armor = player.getAttributeValue(Attributes.ARMOR);
-            staminaToRecover *= (float) (1f - (armor * StaminaFeature.regen$reductionPerArmorPoint));
+            staminaToRecover *= (float) Math.max(0d, 1d - (armor * StaminaFeature.regen$reductionPerArmorPoint));
 
             staminaToRecover = SEventFactory.onStaminaRegenerated(player, staminaToRecover);
-            if (staminaToRecover == 0)
-                return;
-            stamina = StaminaHandler.regenStamina(player, staminaToRecover);
-            if (isStaminaLocked && staminaPercentage >= lock$unlockAtHealthRatio) {
-                StaminaHandler.unlockSprinting(player);
-                isStaminaLocked = false;
+            if (staminaToRecover != 0) {
+                stamina = StaminaHandler.regenStamina(player, staminaToRecover);
+                shouldSync = true;
             }
+        }
+        //Unlock (checked outside regen, so stamina already full, e.g. set by a command, unlocks too)
+        if (isStaminaLocked
+                && maxStaminaPercentage > lock$belowHealthRatio && maxHealth > lock$belowMaxHealth
+                && maxStamina > 0 && StaminaHandler.getStamina(player) / maxStamina >= lock$unlockAtStaminaRatio) {
+            StaminaHandler.unlockSprinting(player);
+            isStaminaLocked = false;
             shouldSync = true;
         }
-        else if (!isStaminaLocked && (maxStaminaPercentage <= lock$belowHealthRatio || maxHealth <= lock$belowMaxHealth)) {
-            StaminaHandler.setStamina(player, 0);
-            StaminaHandler.lockSprinting(player);
-            isStaminaLocked = true;
-            shouldSync = true;
-        }
-        slowdown(player, maxStaminaPercentage, staminaPercentage, stamina, isStaminaLocked);
+        slowdown(player, staminaPercentage, stamina, isStaminaLocked);
 
-        if (isMining(player) || shouldSync)
+        if (shouldSync)
             StaminaSync.sync(player);
     }
 
-    public static void slowdown(Player player, float maxStaminaPercentage, float staminaPercentage, float stamina, boolean isLocked) {
+    public static void slowdown(Player player, float staminaPercentage, float stamina, boolean isLocked) {
         slowdownLocked(player, isLocked);
         slowdownSprinting(player, staminaPercentage, stamina);
     }
 
     private static void slowdownLocked(Player player, boolean isLocked) {
-        MCUtils.removeModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_ID);
-        MCUtils.removeModifier(player, NeoForgeMod.SWIM_SPEED, LOCK_SLOWDOWN_ID);
-        if (!isLocked
-                || !slowdown$whenLocked$enabled)
-            return;
-        MCUtils.applyModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_ID, -slowdown$whenLocked$amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, false);
-        MCUtils.applyModifier(player, NeoForgeMod.SWIM_SPEED, LOCK_SLOWDOWN_ID, -slowdown$whenLocked$amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, false);
+        boolean apply = isLocked && slowdown$whenLocked$enabled;
+        setSlowdownModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_ID, -slowdown$whenLocked$amount, apply);
+        setSlowdownModifier(player, NeoForgeMod.SWIM_SPEED, LOCK_SLOWDOWN_ID, -slowdown$whenLocked$amount, apply);
     }
 
     private static void slowdownSprinting(Player player, float staminaPercentage, float stamina) {
-        MCUtils.removeModifier(player, Attributes.MOVEMENT_SPEED, SPRINT_SLOWDOWN_ID);
-        MCUtils.removeModifier(player, NeoForgeMod.SWIM_SPEED, SPRINT_SLOWDOWN_ID);
-        if (!player.isSprinting()
-                || stamina >= slowdown$sprinting$thresholdFlat && staminaPercentage >= slowdown$sprinting$threshold)
-            return;
-        MCUtils.applyModifier(player, Attributes.MOVEMENT_SPEED, SPRINT_SLOWDOWN_ID, -slowdown$sprinting$amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, false);
-        MCUtils.applyModifier(player, NeoForgeMod.SWIM_SPEED, SPRINT_SLOWDOWN_ID, -slowdown$sprinting$amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, false);
+        boolean apply = player.isSprinting()
+                && (stamina < slowdown$sprinting$thresholdFlat || staminaPercentage < slowdown$sprinting$threshold);
+        setSlowdownModifier(player, Attributes.MOVEMENT_SPEED, SPRINT_SLOWDOWN_ID, -slowdown$sprinting$amount, apply);
+        setSlowdownModifier(player, NeoForgeMod.SWIM_SPEED, SPRINT_SLOWDOWN_ID, -slowdown$sprinting$amount, apply);
     }
 
-    private static final Map<ServerPlayer, Integer> tickMined = new WeakHashMap<>();
+    private static void removeSlowdowns(Player player) {
+        setSlowdownModifier(player, Attributes.MOVEMENT_SPEED, LOCK_SLOWDOWN_ID, 0, false);
+        setSlowdownModifier(player, NeoForgeMod.SWIM_SPEED, LOCK_SLOWDOWN_ID, 0, false);
+        setSlowdownModifier(player, Attributes.MOVEMENT_SPEED, SPRINT_SLOWDOWN_ID, 0, false);
+        setSlowdownModifier(player, NeoForgeMod.SWIM_SPEED, SPRINT_SLOWDOWN_ID, 0, false);
+    }
 
-    @SubscribeEvent
-    public void onBreakSpeed(PlayerEvent.BreakSpeed event) {
-        if (consumption$mine == 0)
+    /**
+     * Adds, updates or removes the modifier only when it actually changes, as each change marks the attribute dirty and gets it synced to the client
+     */
+    private static void setSlowdownModifier(Player player, Holder<Attribute> attribute, Identifier id, double amount, boolean apply) {
+        AttributeInstance attributeInstance = player.getAttribute(attribute);
+        if (attributeInstance == null)
             return;
-        Player player = event.getEntity();
-
-        if (StaminaHandler.isStaminaLocked(player)) {
-            event.setNewSpeed(event.getNewSpeed() * 0.5f);
+        AttributeModifier modifier = attributeInstance.getModifier(id);
+        if (!apply) {
+            if (modifier != null)
+                attributeInstance.removeModifier(id);
         }
-        else if (player instanceof ServerPlayer serverPlayer && StaminaHandler.getStamina(player) > 0) {
-            StaminaHandler.consumeStamina(player, consumption$mine.floatValue());
-            tickMined.put(serverPlayer, player.tickCount);
-        }
-    }
-
-    public static boolean isMining(ServerPlayer player) {
-        return Feature.isEnabled(StaminaFeature.class) && tickMined.containsKey(player) && player.tickCount < tickMined.get(player) + 8;
-    }
-
-    public static boolean isInCombat(ServerPlayer player) {
-        return player.level().getGameTime() - ModNBTData.get(player, LAST_HIT, Integer.class) < 300
-                || player.level().getGameTime() - ModNBTData.get(player, LAST_HURT, Integer.class) < 300;
-    }
-
-    @SubscribeEvent
-    public void onAttack(LivingDamageEvent.Post event) {
-        if (consumption$outOfCombatMultiplier == 1f)
-            return;
-
-        if (event.getEntity() instanceof ServerPlayer serverPlayer)
-            ModNBTData.put(serverPlayer, LAST_HURT, serverPlayer.level().getGameTime());
-        else if (event.getSource().getEntity() instanceof ServerPlayer serverPlayer)
-            ModNBTData.put(serverPlayer, LAST_HIT, serverPlayer.level().getGameTime());
-    }
-
-    @SubscribeEvent
-    public void onDeath(LivingDeathEvent event) {
-        if (!this.isEnabled()
-                || !(event.getEntity() instanceof ServerPlayer player))
-            return;
-
-        tickMined.remove(player);
+        else if (modifier == null || modifier.amount() != amount)
+            attributeInstance.addOrUpdateTransientModifier(new AttributeModifier(id, amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
     }
 
     @SubscribeEvent
     public void onPlayerJump(final LivingEvent.LivingJumpEvent event) {
         if (!this.isEnabled()
                 || consumption$jump == 0
-                || !(event.getEntity() instanceof ServerPlayer player))
+                || (disable$sprinting && disable$swimming)
+                || !(event.getEntity() instanceof ServerPlayer player)
+                || player.isCreative()
+                || player.isSpectator())
             return;
 
-        float consumed = consumption$jump;
+        float consumed = getStaminaToConsume(player, consumption$jump);
+        if (consumed != 0)
+            StaminaHandler.consumeStamina(player, consumed);
+    }
+
+    /**
+     * Applies the stamina modifiers of the active effects, {@link insane96mcp.stamina.event.StaminaEvent.Consumed} and the out of combat multiplier to the stamina consumed
+     */
+    private static float getStaminaToConsume(ServerPlayer player, float staminaToConsume) {
         float percIncrease = 0f;
         for (MobEffectInstance instance : player.getActiveEffects()) {
             if (instance.getEffect().value() instanceof IStaminaModifier staminaModifier)
                 percIncrease += staminaModifier.consumedStaminaModifier(instance.getAmplifier());
         }
-        consumed += (consumed * percIncrease);
-        StaminaHandler.consumeStamina(player, consumed);
+        staminaToConsume += (staminaToConsume * percIncrease);
+        staminaToConsume = SEventFactory.onStaminaConsumed(player, staminaToConsume);
+        if (!InCombat.isInCombat(player, consumption$inCombatTime))
+            staminaToConsume *= consumption$outOfCombatMultiplier.floatValue();
+        return staminaToConsume;
     }
 
     @SubscribeEvent

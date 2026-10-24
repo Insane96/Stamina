@@ -26,8 +26,8 @@ public class Stamina
     public static ILModConfig CONFIG;
 
     public Stamina(IEventBus modEventBus, ModContainer modContainer) {
-        CONFIG = new ILModConfig(location("main"), "Single Module", ModConfig.Type.COMMON, modEventBus, Stamina.class.getClassLoader());
-        modContainer.registerConfig(ModConfig.Type.COMMON, CONFIG.spec);
+        CONFIG = new ILModConfig(location("main"), "Single Module", ModConfig.Type.SERVER, modEventBus, Stamina.class.getClassLoader());
+        modContainer.registerConfig(ModConfig.Type.SERVER, CONFIG.spec);
 
         NeoForge.EVENT_BUS.register(this);
 
