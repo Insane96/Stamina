@@ -1,3 +1,6 @@
+# 2.1.0.1
+* Fixed the stamina overlay sometimes covering half a heart more than the current health
+
 # 2.1.0.0
 * The config is now a SERVER config and is synced to clients, so on dedicated servers the stamina bar and sprinting follow the server's values
   * The config file is now `config/stamina-server.toml`. `saves/<world>/serverconfig/stamina-server.toml` can be used as a per-world override

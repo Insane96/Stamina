@@ -86,7 +86,7 @@ public class StaminaFeatureClient {
         float staminaPerHalfHeart = maxStamina / staminaHealth;
         if (shouldRenderOnOneRow)
             staminaPerHalfHeart = maxStamina / Math.min(staminaHealth, 20f);
-        int halfHeartsMaxStamina = Mth.ceil(maxStamina / staminaPerHalfHeart);
+        int halfHeartsMaxStamina = shouldRenderOnOneRow ? Math.min(staminaHealth, 20) : staminaHealth;
         int halfHeartsStamina = Mth.ceil(StaminaHandler.getStamina(player) / staminaPerHalfHeart);
         int height = 9;
         int regen = -1;
